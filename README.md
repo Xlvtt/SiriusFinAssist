@@ -7,7 +7,7 @@
 
 ## Пример
 
-![alt text](hLLMP_Serious/3.jpg?raw=true)
+![hLLMP_Serious/3.jpg](https://github.com/Xlvtt/SiriusFinAssist/blob/e3d6a9a23e312cc954055e7a6987ae9145a87ecd/LLMP_Serious/3.jpg)?raw=true)
 
 ## Надо
 - Собрать пайплайн который сможет на эти вопросы отвечать
