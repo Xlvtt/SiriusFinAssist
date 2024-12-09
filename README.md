@@ -18,3 +18,7 @@
 - Можно попытаться решить промптингтом, можно РАГом, можно СФТ и
 разные результаты получить
 - (!) Главное - придумать как оценить качество решения
+
+## Work flow
+![hLLMP_Serious/5.jpg](https://github.com/Xlvtt/SiriusFinAssist/blob/6579e9d3931ae8381bf84de3320540bf1bbbd83a/LLMP_Serious/5.png)
+![hLLMP_Serious/4.jpg](https://github.com/Xlvtt/SiriusFinAssist/blob/6579e9d3931ae8381bf84de3320540bf1bbbd83a/LLMP_Serious/4.png)
