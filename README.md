@@ -26,4 +26,4 @@
 
 
 ## Наша архитиктура
-![hLLMP_Serious/6.jpg](https://github.com/Xlvtt/SiriusFinAssist/blob/21daa386feb3161474d0597f2e2f4c93f671105b/LLMP_Serious/IMG_7611.HEIC)
+![hLLMP_Serious/IMG_7611.HEIC](https://github.com/Xlvtt/SiriusFinAssist/blob/21daa386feb3161474d0597f2e2f4c93f671105b/LLMP_Serious/IMG_7611.HEIC)
