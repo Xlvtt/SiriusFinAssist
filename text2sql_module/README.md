@@ -7,3 +7,10 @@ Input:
 
 Output:
 - answer: str - текстовый ответ на основе данных
+
+
+## Запуск
+
+```commandline
+uvicorn text2sql_service:app --reload
+```
