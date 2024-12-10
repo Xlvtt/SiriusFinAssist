@@ -23,3 +23,7 @@
 ![hLLMP_Serious/5.jpg](https://github.com/Xlvtt/SiriusFinAssist/blob/6579e9d3931ae8381bf84de3320540bf1bbbd83a/LLMP_Serious/5.png)
 ##
 ![hLLMP_Serious/4.jpg](https://github.com/Xlvtt/SiriusFinAssist/blob/6579e9d3931ae8381bf84de3320540bf1bbbd83a/LLMP_Serious/4.png)
+
+
+## Наша архитиктура
+![hLLMP_Serious/6.jpg](https://github.com/Xlvtt/SiriusFinAssist/blob/21daa386feb3161474d0597f2e2f4c93f671105b/LLMP_Serious/IMG_7611.HEIC)
