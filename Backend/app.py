@@ -19,9 +19,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app = FastAPI()
-
-
 class ChatResponse(BaseModel):
     message: str
     success: bool = True
