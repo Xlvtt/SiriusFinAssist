@@ -3,10 +3,12 @@ from fastapi import FastAPI, Query
 from pydantic import BaseModel
 import uvicorn
 from fastapi.middleware.cors import CORSMiddleware
+from Qwen import Bot
 
 app = FastAPI()
 
-# Настраиваем CORS для работы с фронтендом
+bot = Bot()
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -24,13 +26,11 @@ class ChatResponse(BaseModel):
 
 @app.get("/chat")
 async def chat_endpoint(
-    message: str = Query(..., description="Сообщение от пользователя")  # Явно указываем, что параметр обязательный
+    message: str = Query(..., description="Сообщение от пользователя")
 ):
     try:
         # Тут твоя логика обработки
-        response = f"Получил сообщение: {message}"
-        print(response)
-        respObj = ChatResponse(message=response)
+        respObj = ChatResponse(message=bot.get(message))
         print(str(respObj))
         return respObj
     except Exception as e:
@@ -45,5 +45,5 @@ async def chat_endpoint(
 async def root():
     return {"status": "API работает!"}
 
-uvicorn.run(app, host="0.0.0.0", port=8000)
+uvicorn.run(app, host="0.0.0.0", port=8001)
 
