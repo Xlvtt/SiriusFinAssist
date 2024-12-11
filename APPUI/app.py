@@ -2,7 +2,7 @@ import streamlit as st
 
 from apiClient import ApiClient
 
-client = ApiClient('http://localhost:8000')
+client = ApiClient('http://backend:8001')
 
 # Настройка страницы
 st.set_page_config(page_title="Чат-бот", page_icon="🦊", layout="wide")

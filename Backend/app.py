@@ -5,7 +5,7 @@ import uvicorn
 from fastapi.middleware.cors import CORSMiddleware
 from Qwen import Bot
 
-from graph import assistant
+#from graph import assistant
 
 app = FastAPI()
 
@@ -30,7 +30,7 @@ async def chat_endpoint(
     message: str = Query(..., description="Сообщение от пользователя")
 ):
     try:
-        respObj = assistant.invoke({"input": message})
+        respObj = ChatResponse(message=bot.get(message)) #assistant.invoke({"input": message})
         print(str(respObj))
         return respObj
     except Exception as e:
@@ -46,5 +46,4 @@ async def chat_endpoint(
 async def root():
     return {"status": "API работает!"}
 
-uvicorn.run(app, host="0.0.0.0", port=8001)
 
