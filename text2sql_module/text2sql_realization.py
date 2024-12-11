@@ -181,6 +181,7 @@ def text2sql_function(question: str) -> str:
     {few_shot_examples}
     Тебе необходимо написать SQL запрос, который достаёт все нужные данные для ответа на следующий вопрос: {question}.
     В качестве ответа напиши только SQL.'''
+    print(user_prompt)
 
     model_answer = get_model_answer(system_prompt, user_prompt)
 
