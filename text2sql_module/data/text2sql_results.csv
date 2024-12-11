@@ -1,0 +1,1891 @@
+question,expected_sql,generated_sql,similarity,execution_match,error
+Сколько я последний раз постратила в Lady Collection? ,"SELECT
+  amount_value,
+  description,
+  category,
+  op_time
+FROM
+  operations_cte
+WHERE
+  brand ILIKE '%Lady Collection%'
+  AND op_type = 'Debit'
+ORDER BY op_time DESC
+LIMIT 1;","SELECT
+  amount_value,
+  description,
+  category,
+  op_time
+FROM
+  operations_cte
+WHERE
+  (brand ILIKE '%Lady Collection%' OR brand ILIKE '%Лади Коллекции%')
+  AND op_type = 'Debit'
+ORDER BY op_time DESC
+LIMIT 1;",0.9072164948453608,True,
+Сколько раз я тратила деньги на такси по выходным и пятница в этом году?,"SELECT
+  COUNT(*) AS operation_count
+FROM
+  operations_cte
+WHERE
+  category = 'Такси'
+  AND op_type = 'Debit'
+  AND EXTRACT(YEAR FROM op_time) = EXTRACT(YEAR FROM CURRENT_DATE)
+  AND EXTRACT(ISODOW FROM op_time) IN (5, 6, 7);","SELECT
+  COUNT(*) AS times_spent_on_taxi,
+  CASE 
+    WHEN EXTRACT(DOW FROM op_time) = 5 THEN 'Пятница'
+    ELSE 'Выходные'
+  END AS day_type
+FROM
+  operations_cte
+WHERE
+  category = 'Такси'
+  AND op_type = 'Debit'
+  AND op_time >= DATE_TRUNC('year', CURRENT_DATE)
+GROUP BY
+  day_type;",0.4549019607843137,False,Column mismatch
+Мои траты на одежду в сентябре,"SELECT
+  amount_value,
+  description,
+  category,
+  op_time
+FROM
+  operations_cte
+WHERE
+  category = 'Одежда и обувь'
+  AND op_type = 'Debit'
+  AND op_time >= '2023-09-01'
+  AND op_time < '2023-10-01';","SELECT
+  amount_value,
+  description,
+  category,
+  op_time
+FROM
+  operations_cte
+WHERE
+  category = 'Одежда и обувь'
+  AND op_type = 'Debit'
+  AND op_time >= '2023-09-01'
+  AND op_time < '2023-10-01';",1.0,True,
+Сколько в среднем в год я трачу на Яндекс Такси?,"SELECT
+  amount_value,
+  description,
+  category,
+  op_time
+FROM
+  operations_cte
+WHERE
+  category = 'Такси'
+  AND (brand ILIKE '%Яндекс Такси%' OR brand ILIKE '%Яндекс.Такси%' OR brand ILIKE '%Yandex Taxi%' OR brand ILIKE '%Yandex.Taxi%')
+  AND op_type = 'Debit'
+  AND op_time >= CURRENT_DATE - INTERVAL '1 year';","SELECT
+  SUM(amount_value) AS annual_spent,
+  DATE_TRUNC('year', op_time) AS year
+FROM
+  operations_cte
+WHERE
+  (description ILIKE '%Яндекс Такси%'
+  OR brand ILIKE '%Яндекс Такси%'
+  OR category = 'Такси')
+  AND op_type = 'Debit'
+  AND op_time >= DATE_TRUNC('year', CURRENT_DATE) - INTERVAL '1 year'
+  AND op_time < DATE_TRUNC('year', CURRENT_DATE)
+GROUP BY
+  year;",0.5970588235294118,False,Column mismatch
+Сколько я последний раз потратила на заказ в озоне?,"SELECT
+  amount_value,
+  description,
+  category,
+  op_time
+FROM
+  operations_cte
+WHERE
+  (brand ILIKE '%Озон%' OR brand ILIKE '%Ozon%')
+  AND op_type = 'Debit'
+ORDER BY op_time DESC
+LIMIT 1;","SELECT
+  amount_value,
+  description,
+  category,
+  op_time
+FROM
+  operations_cte
+WHERE
+  (brand ILIKE '%Озон%' OR brand ILIKE '%Ozon%' OR brand ILIKE '%OZON%')
+  AND op_type = 'Debit'
+ORDER BY op_time DESC
+LIMIT 1;",0.9408866995073891,True,
+Сколько всего я снял наличными с 05.09 по 23.10?,"SELECT
+  amount_value,
+  description,
+  category,
+  op_time
+FROM
+  operations_cte
+WHERE
+  category = 'Наличные'
+  AND op_type = 'Debit'
+  AND op_time >= DATE '2023-09-05'
+  AND op_time < DATE '2023-10-23';","SELECT
+  SUM(amount_value) AS total_withdrawn,
+  DATE_TRUNC('day', op_time) AS day
+FROM
+  operations_cte
+WHERE
+  category = 'Наличные'
+  AND op_type = 'Debit'
+  AND op_time >= '2023-09-05'
+  AND op_time <= '2023-10-23'
+GROUP BY
+  day
+ORDER BY
+  day;",0.7268722466960352,False,Column mismatch
+"напомни, когда я в октябре ходила в кино?","SELECT
+  amount_value,
+  description,
+  category,
+  op_time
+FROM
+  operations_cte
+WHERE
+  category = 'Кино'
+  AND op_type = 'Debit'
+  AND op_time >= '2023-10-01'
+  AND op_time < '2023-11-01';","SELECT
+  amount_value,
+  description,
+  category,
+  brand,
+  op_time
+FROM
+  operations_cte
+WHERE
+  category = 'Кино'
+  AND op_type = 'Debit'
+  AND EXTRACT(MONTH FROM op_time) = 10;",0.8247978436657682,False,Column mismatch
+Сумма последней поездки на Яндекс такси,"SELECT
+  amount_value,
+  description,
+  category,
+  op_time
+FROM
+  operations_cte
+WHERE
+  (brand ILIKE '%Яндекс Такси%' OR brand ILIKE '%Яндекс.Такси%' OR brand ILIKE '%Yandex Taxi%' OR brand ILIKE '%Yandex.Taxi%')
+  AND op_type = 'Debit'
+ORDER BY op_time DESC
+LIMIT 1;","SELECT
+  SUM(amount_value) AS last_taxi_trip_amount,
+  MAX(op_time) AS last_taxi_trip_date
+FROM
+  operations_cte
+WHERE
+  brand ILIKE '%Яндекс.Такси%'
+  OR brand ILIKE '%Яндекс Такси%'
+  OR brand ILIKE '%Yandex.Taxi%'
+  OR brand ILIKE '%Yandex Taxi%'
+  AND op_type = 'Debit';",0.6224677716390423,False,Column mismatch
+Как много я потратил за прошлые 3 месяца на Яндекс.такси? ,"SELECT
+  amount_value,
+  description,
+  category,
+  op_time
+FROM
+  operations_cte
+WHERE
+  (brand ILIKE '%Яндекс Такси%' OR brand ILIKE '%Яндекс.Такси%' OR brand ILIKE '%Yandex Taxi%' OR brand ILIKE '%Yandex.Taxi%')
+  AND op_type = 'Debit'
+  AND op_time >= CURRENT_DATE - INTERVAL '6 month'
+  AND op_time < DATE_TRUNC('month', CURRENT_DATE);","SELECT
+  SUM(amount_value) AS total_spent,
+  DATE_TRUNC('month', op_time) AS month
+FROM
+  operations_cte
+WHERE
+  (brand ILIKE '%Яндекс.Такси%' OR brand ILIKE '%Yandex.Taxi%' OR brand ILIKE '%Yandex Taxi%')
+  AND op_type = 'Debit'
+  AND op_time >= DATE_TRUNC('month', CURRENT_DATE - INTERVAL '3 months')
+  AND op_time < DATE_TRUNC('month', CURRENT_DATE)
+GROUP BY
+  month;",0.5492957746478874,False,Column mismatch
+Какого числа я перевела деньги на кредит?,"SELECT
+  amount_value,
+  description,
+  category,
+  op_time
+FROM
+  operations_cte
+WHERE
+  category = 'Кредиты'
+  AND op_type = 'Debit'
+ORDER BY op_time DESC
+LIMIT 1;","SELECT
+  amount_value,
+  description,
+  category,
+  op_time
+FROM
+  operations_cte
+WHERE
+  category = 'Переводы'
+  AND op_type = 'Debit'
+ORDER BY
+  op_time DESC
+LIMIT 1;",0.972972972972973,False,Row mismatch
+Где я последний раз покупала лекарства и на какую сумму?,"SELECT
+  amount_value,
+  description,
+  category,
+  op_time
+FROM
+  operations_cte
+WHERE
+  category = 'Аптеки'
+  AND op_type = 'Debit'
+ORDER BY op_time DESC
+LIMIT 1;","SELECT
+  amount_value,
+  description,
+  category,
+  op_time
+FROM
+  operations_cte
+WHERE
+  category = 'Аптеки'
+  AND op_type = 'Debit'
+ORDER BY op_time DESC
+LIMIT 1;",1.0,True,
+На какую сумму была последняя покупка в Магнит Косметик?,"SELECT
+  amount_value,
+  description,
+  category,
+  op_time
+FROM
+  operations_cte
+WHERE
+  (brand ILIKE '%Магнит Косметик%' OR brand ILIKE '%Magnet Cosmetics%')
+  AND op_type = 'Debit'
+ORDER BY op_time DESC
+LIMIT 1;","SELECT
+  amount_value,
+  description,
+  category,
+  op_time
+FROM
+  operations_cte
+WHERE
+  category = 'Косметика'
+  AND brand = 'Магнит'
+  AND op_type = 'Debit'
+ORDER BY op_time DESC
+LIMIT 1;",0.7574257425742574,False,Row mismatch
+Сколько я потратила на одежду осенью?,"SELECT
+  amount_value,
+  description,
+  category,
+  op_time
+FROM
+  operations_cte
+WHERE
+  category = 'Одежда и обувь'
+  AND op_type = 'Debit'
+  AND op_time >= '2023-09-01'
+  AND op_time < '2023-12-01';","SELECT
+  SUM(amount_value) AS total_spent,
+  DATE_TRUNC('month', op_time) AS month
+FROM
+  operations_cte
+WHERE
+  category = 'Одежда'
+  AND op_type = 'Debit'
+  AND op_time >= '2023-09-01'
+  AND op_time < '2023-12-01'
+GROUP BY
+  month;",0.7465437788018433,False,Column mismatch
+За год в среднем какое количество переводов поступало еженедельно мне на карту,"SELECT
+  DATE_TRUNC('week', op_time) AS week,
+  COUNT(*) AS weekly_transfers
+FROM
+  operations_cte
+WHERE
+  category = 'Переводы'
+  AND op_type = 'Credit'
+  AND op_time >= DATE_TRUNC('week', CURRENT_DATE) - INTERVAL '1 year'
+  AND op_time < DATE_TRUNC('week', CURRENT_DATE)
+GROUP BY
+  week;","SELECT
+  COUNT(*) AS weekly_transfers,
+  DATE_TRUNC('week', op_time) AS week
+FROM
+  operations_cte
+WHERE
+  category = 'Переводы'
+  AND op_type = 'Credit'
+  AND op_time >= DATE_TRUNC('year', CURRENT_DATE - INTERVAL '1 year')
+  AND op_time < DATE_TRUNC('year', CURRENT_DATE)
+GROUP BY
+  week
+ORDER BY
+  week;",0.7609427609427609,False,Row mismatch
+Сколько я потратила на Яндекс такси в феврале 2024?,"SELECT
+  amount_value,
+  description,
+  category,
+  op_time
+FROM
+  operations_cte
+WHERE
+  category = 'Такси'
+  AND brand ILIKE '%Яндекс%'
+  AND op_type = 'Debit'
+  AND op_time >= '2024-02-01'
+  AND op_time < '2024-03-01';","SELECT
+  amount_value,
+  description,
+  category,
+  op_time
+FROM
+  operations_cte
+WHERE
+  (brand ILIKE '%Яндекс такси%'
+   OR brand ILIKE '%Yandex Taxi%'
+   OR brand ILIKE '%ЯндексТакси%')
+  AND op_type = 'Debit'
+  AND op_time >= '2024-02-01'
+  AND op_time < '2024-03-01';",0.795131845841785,True,
+Когда последний раз я платила по кредиту за стиральную машину?,"SELECT
+  amount_value,
+  description,
+  category,
+  op_time
+FROM
+  operations_cte
+WHERE
+  category = 'Кредиты'
+  AND op_type = 'Debit'
+ORDER BY
+  op_time DESC
+LIMIT 1;","SELECT
+  amount_value,
+  description,
+  category,
+  op_time
+FROM
+  operations_cte
+WHERE
+  category = 'Бытовые приборы'
+  AND description LIKE '%стиральная машина%'
+  AND op_type = 'Debit'
+ORDER BY
+  op_time DESC
+LIMIT 1;",0.8320413436692506,False,Row mismatch
+Сколько в среднем я трачу на вб в неделю?,"SELECT
+  SUM(amount_value) AS weekly_spent,
+  DATE_TRUNC('week', op_time) AS week
+FROM
+  operations_cte
+WHERE
+  (brand ILIKE '%ВБ%' OR brand ILIKE '%WB%' OR brand ILIKE '%wildberries%' OR brand ILIKE '%Вайлберис%')
+  AND op_type = 'Debit'
+  AND op_time >= DATE_TRUNC('week', CURRENT_DATE - INTERVAL '24 week')
+  AND op_time < DATE_TRUNC('week', CURRENT_DATE)
+GROUP BY
+  week;","SELECT
+  AVG(amount_value) AS average_weekly_spent,
+  DATE_TRUNC('week', op_time) AS week
+FROM
+  operations_cte
+WHERE
+  (brand ILIKE '%ВБ%'
+  OR brand ILIKE '%WB%'
+  OR brand ILIKE '%Wildberries%'
+  OR brand ILIKE '%Вайлдберрис%'
+  OR brand ILIKE '%Вильдберриз%')
+  AND op_type = 'Debit'
+  AND op_time >= DATE_TRUNC('week', CURRENT_DATE) - INTERVAL '52 weeks'
+  AND op_time < DATE_TRUNC('week', CURRENT_DATE)
+GROUP BY
+  week;",0.9075,False,Column mismatch
+Сколько я потратила на Лэтуаль за прошлый год?,"SELECT
+  amount_value,
+  description,
+  category,
+  op_time
+FROM
+  operations_cte
+WHERE
+  (brand ILIKE '%Лэтуаль%'
+  OR brand ILIKE '%Letual%'
+  OR brand ILIKE '%Летуаль%')
+  AND op_type = 'Debit'
+  AND op_time >= '2023-01-01'
+  AND op_time < '2024-01-01';","SELECT
+  SUM(amount_value) AS total_spent,
+  COUNT(*) AS transaction_count
+FROM
+  operations_cte
+WHERE
+  (brand ILIKE '%Лэтуаль%'
+   OR brand ILIKE '%Letual%'
+   OR brand ILIKE '%Летуаль%')
+  AND op_type = 'Debit'
+  AND op_time >= '2022-12-01'
+  AND op_time < '2023-12-01';",0.8166351606805293,False,Column mismatch
+Какими аптеками я пользовалась в прошлом году?,"SELECT DISTINCT
+  brand
+FROM
+  operations_cte
+WHERE
+  category = 'Аптеки'
+  AND op_type = 'Debit'
+  AND EXTRACT(YEAR FROM op_time) = EXTRACT(YEAR FROM CURRENT_DATE) - 1;","SELECT DISTINCT description AS pharmacy_name, op_time
+FROM operations_cte
+WHERE category = 'Аптеки'
+  AND op_type = 'Debit'
+  AND op_time >= DATE_TRUNC('year', CURRENT_DATE) - INTERVAL '1 year'
+  AND op_time < DATE_TRUNC('year', CURRENT_DATE);",0.6213592233009708,False,Column mismatch
+Сколько я потратила на Яндекс такси за пол года?,"SELECT
+  amount_value,
+  description,
+  category,
+  op_time
+FROM
+  operations_cte
+WHERE
+  (brand ILIKE '%Яндекс Такси%' OR brand ILIKE '%Яндекс.Такси%' OR brand ILIKE '%Yandex Taxi%' OR brand ILIKE '%Yandex.Taxi%')
+  AND op_type = 'Debit'
+  AND op_time >= CURRENT_DATE - INTERVAL '6 months';","SELECT
+  SUM(amount_value) AS total_spent,
+  AVG(amount_value) AS average_transaction,
+  MIN(amount_value) AS min_transaction,
+  MAX(amount_value) AS max_transaction,
+  COUNT(*) AS transaction_count
+FROM
+  operations_cte
+WHERE
+  (description LIKE '%Яндекс такси%' OR brand LIKE '%Яндекс такси%')
+  AND op_type = 'Debit'
+  AND op_time >= '2024-01-01'
+  AND op_time < '2024-07-01';",0.4716417910447761,False,Column mismatch
+Когда я последний раз покупала авиабилеты?,"SELECT
+  amount_value,
+  description,
+  category,
+  op_time
+FROM
+  operations_cte
+WHERE
+  category = 'Авиабилеты'
+  AND op_type = 'Debit'
+ORDER BY op_time DESC
+LIMIT 1;","SELECT
+  amount_value,
+  description,
+  category,
+  op_time
+FROM
+  operations_cte
+WHERE
+  category = 'Авиабилеты'
+  AND op_type = 'Debit'
+ORDER BY op_time DESC
+LIMIT 1;",1.0,True,
+Сколько у меня уходит на фастфуд в среднем за месяц?,"SELECT
+  SUM(amount_value) AS monthly_spent,
+  DATE_TRUNC('month', op_time) AS month
+FROM
+  operations_cte
+WHERE
+  category = 'Фастфуд'
+  AND op_type = 'Debit'
+  AND op_time >= DATE_TRUNC('month', CURRENT_DATE - INTERVAL '6 month')
+  AND op_time < DATE_TRUNC('month', CURRENT_DATE)
+GROUP BY
+  month;","SELECT
+  AVG(amount_value) AS average_monthly_spent,
+  DATE_TRUNC('month', op_time) AS month
+FROM
+  operations_cte
+WHERE
+  category = 'Фастфуд'
+  AND op_type = 'Debit'
+  AND op_time >= DATE_TRUNC('month', CURRENT_DATE - INTERVAL '6 month')
+  AND op_time < DATE_TRUNC('month', CURRENT_DATE)
+GROUP BY
+  month;",0.976897689768977,False,Column mismatch
+Сколько в среднем в месяц денег я снимаю с карты наличкой последние 2 года?,"SELECT
+  SUM(amount_value) AS monthly_cash_withdrawal,
+  DATE_TRUNC('month', op_time)
+FROM
+  operations_cte
+WHERE
+  category = 'Наличные'
+  AND op_type = 'Debit'
+  AND op_time >= DATE_TRUNC('month', CURRENT_DATE) - INTERVAL '2 year'
+  AND op_time < DATE_TRUNC('month', CURRENT_DATE)
+GROUP BY
+  DATE_TRUNC('month', op_time);","SELECT
+    SUM(amount_value) AS monthly_withdrawal,
+    DATE_TRUNC('month', op_time) AS month
+FROM
+    operations_cte
+WHERE
+    category = 'Наличные'
+    AND op_type = 'Debit'
+    AND op_time >= DATE_TRUNC('year', CURRENT_DATE - INTERVAL '2 years')
+    AND op_time < DATE_TRUNC('month', CURRENT_DATE)
+GROUP BY
+    month;",0.6998444790046656,False,Column mismatch
+Сколько я последний раз потратила на кино?,"SELECT
+  amount_value,
+  description,
+  category,
+  op_time
+FROM
+  operations_cte
+WHERE
+  category = 'Кино'
+  AND op_type = 'Debit'
+ORDER BY op_time DESC
+LIMIT 1;","SELECT
+  amount_value,
+  description,
+  category,
+  op_time
+FROM
+  operations_cte
+WHERE
+  category = 'Кино'
+  AND op_type = 'Debit'
+ORDER BY op_time DESC
+LIMIT 1;",1.0,True,
+"Сколько составляет мой доход за первый квартал этого года, включая бонус, отпускные и компенсацию за канцтовары?","SELECT
+  amount_value,
+  description,
+  category,
+  op_time
+FROM
+  operations_cte
+WHERE
+  (category = 'Бонусы' OR category = 'Зарплата' OR category = 'Канцтовары')
+  AND op_type = 'Credit'
+  AND op_time >= DATE_TRUNC('year', CURRENT_DATE)
+  AND op_time < DATE_TRUNC('year', CURRENT_DATE) + INTERVAL '3 months';","SELECT
+  SUM(CASE WHEN category IN ('Доход', 'Бонусы', 'Отпускные', 'Компенсация за канцтовары') THEN amount_value ELSE 0 END) AS total_income
+FROM
+  operations_cte
+WHERE
+  op_type = 'Credit'
+  AND op_time >= DATE_TRUNC('quarter', CURRENT_DATE);",0.18018018018018017,False,Column mismatch
+Какой был размер моей первой зарплаты в 2024 году?,"SELECT
+  amount_value,
+  description,
+  category,
+  op_time
+FROM
+  operations_cte
+WHERE
+  category = 'Зарплата'
+  AND op_type = 'Credit'
+  AND EXTRACT(YEAR FROM op_time) = 2024
+ORDER BY op_time ASC
+LIMIT 1;","SELECT
+  amount_value,
+  description,
+  category,
+  op_time
+FROM
+  operations_cte
+WHERE
+  category = 'Зарплаты'
+  AND op_type = 'Credit'
+  AND op_time >= '2024-01-01'
+  AND op_time < '2025-01-01'
+ORDER BY
+  op_time ASC
+LIMIT 1;",0.8221709006928406,False,Row mismatch
+"Когда мне в последний раз делали переводы больше, чем 1000 рублей?","SELECT
+  amount_value,
+  description,
+  category,
+  op_time
+FROM
+  operations_cte
+WHERE
+  category = 'Переводы'
+  AND amount_value > 1000
+  AND op_type = 'Credit'
+ORDER BY op_time DESC
+LIMIT 1;","SELECT
+  amount_value,
+  description,
+  category,
+  op_time
+FROM
+  operations_cte
+WHERE
+  category = 'Переводы'
+  AND amount_value > 1000
+  AND op_type = 'Debit'
+ORDER BY op_time DESC
+LIMIT 1;",0.987012987012987,False,Row mismatch
+Сколько я потратила на походы в киномакс летом 2023?,"SELECT
+  amount_value,
+  description,
+  category,
+  op_time
+FROM
+  operations_cte
+WHERE
+  (brand ILIKE '%Киномакс%' OR brand ILIKE '%Kinomax%' OR brand ILIKE '%Kinomaks%')
+  AND op_type = 'Debit'
+  AND op_time >= '2023-06-01'
+  AND op_time < '2023-09-01';","SELECT
+  amount_value,
+  description,
+  category,
+  op_time
+FROM
+  operations_cte
+WHERE
+  (brand ILIKE '%Кино%'
+   OR brand ILIKE '%Cinema%'
+   OR description ILIKE '%кино%'
+   OR description ILIKE '%cinema%')
+  AND op_type = 'Debit'
+  AND op_time >= '2023-06-01'
+  AND op_time < '2023-09-01';",0.7992700729927007,True,
+На что я тратила деньги в марте 2024?,"SELECT
+  SUM(amount_value) AS total_spent,
+  category
+FROM
+  operations_cte
+WHERE
+  op_type = 'Debit'
+  AND op_time >= '2024-03-01'
+  AND op_time < '2024-04-01'
+GROUP BY 
+  category
+ORDER BY total_spent DESC;","SELECT
+  amount_value,
+  description,
+  category,
+  op_time
+FROM
+  operations_cte
+WHERE
+  op_type = 'Debit'
+  AND op_time >= '2024-03-01'
+  AND op_time < '2024-04-01';",0.7573333333333333,False,Column mismatch
+Посчитай сколько я потратила в самокате за март этого года.,"SELECT
+  amount_value,
+  description,
+  category,
+  op_time
+FROM
+  operations_cte
+WHERE
+  (brand ILIKE '%Самокат%' OR brand ILIKE '%Samokat%')
+  AND op_type = 'Debit'
+  AND op_time >= '2024-03-01'
+  AND op_time < '2024-04-01';","SELECT
+  SUM(amount_value) AS total_spent,
+  COUNT(*) AS number_of_transactions
+FROM
+  operations_cte
+WHERE
+  category = 'Спорт' -- Предполагаем, что ""Спорт"" относится к самокатам
+  AND op_type = 'Debit'
+  AND op_time >= '2024-03-01'
+  AND op_time < '2024-04-01';",0.6094069529652352,False,Column mismatch
+Рассчитай мои средненедельные траты в супермаркетах.,"SELECT
+  SUM(amount_value) AS weekly_spent,
+  DATE_TRUNC('week', op_time) AS week
+FROM
+  operations_cte
+WHERE
+  category = 'Супермаркеты'
+  AND op_type = 'Debit'
+  AND op_time >= DATE_TRUNC('month', CURRENT_DATE - INTERVAL '6 month')
+  AND op_time < DATE_TRUNC('month', CURRENT_DATE)
+GROUP BY
+  week;","SELECT
+  AVG(amount_value) AS average_weekly_spent,
+  DATE_TRUNC('week', op_time) AS week
+FROM
+  operations_cte
+WHERE
+  category = 'Супермаркеты'
+  AND op_type = 'Debit'
+  AND op_time >= DATE_TRUNC('month', CURRENT_DATE - INTERVAL '6 month')
+  AND op_time < DATE_TRUNC('month', CURRENT_DATE)
+GROUP BY
+  week
+ORDER BY
+  week;",0.9519230769230769,False,Column mismatch
+Покажи последнюю покупку в бифришке,"SELECT
+  amount_value,
+  description,
+  category,
+  op_time
+FROM
+  operations_cte
+WHERE
+  (brand ILIKE '%бифришк%' OR brand ILIKE '%bifrishk%' OR brand ILIKE '%Befree%' OR brand ILIKE '%бифри%')
+  AND op_type = 'Debit'
+ORDER BY
+  op_time DESC
+LIMIT 1;","SELECT
+  amount_value,
+  description,
+  category,
+  op_time
+FROM
+  operations_cte
+WHERE
+  (brand ILIKE '%Бифриш%' OR brand ILIKE '%Bifish%')
+  AND op_type = 'Debit'
+ORDER BY op_time DESC
+LIMIT 1;",0.7757847533632287,False,Row mismatch
+"Рассчитай среднюю сумму, которую я трачу на озон в неделю?","SELECT
+  SUM(amount_value) AS weekly_spent,
+  DATE_TRUNC('week', op_time) AS week
+FROM
+  operations_cte
+WHERE
+  (brand ILIKE '%Озон%' OR brand ILIKE '%Ozon%')
+  AND op_type = 'Debit'
+  AND op_time >= DATE_TRUNC('month', CURRENT_DATE - INTERVAL '6 month')
+  AND op_time < DATE_TRUNC('month', CURRENT_DATE)
+GROUP BY
+  week;","SELECT
+  AVG(amount_value) AS average_weekly_spent,
+  DATE_TRUNC('week', op_time) AS week
+FROM
+  operations_cte
+WHERE
+  description LIKE '%Озон%'
+  AND op_type = 'Debit'
+  AND op_time >= DATE_TRUNC('week', CURRENT_DATE - INTERVAL '24 week')
+  AND op_time < DATE_TRUNC('week', CURRENT_DATE)
+GROUP BY
+  week;",0.8580542264752791,False,Column mismatch
+Сколько всего за новогодние праздники я потратил в Пятерочке?,"SELECT
+  amount_value,
+  description,
+  category,
+  op_time
+FROM
+  operations_cte
+WHERE
+  (brand ILIKE '%Пятёрочка%'
+  OR brand ILIKE '%Пятерочка%'
+  OR brand ILIKE '%Pyatyorochka%')
+  AND op_type = 'Debit'
+  AND op_time >= '2024-01-01'
+  AND op_time < '2024-01-08';","SELECT
+  SUM(amount_value) AS total_spent,
+  COUNT(*) AS transaction_count,
+  MIN(op_time) AS first_transaction,
+  MAX(op_time) AS last_transaction
+FROM
+  operations_cte
+WHERE
+  (brand ILIKE '%Пятерочка%' OR brand ILIKE '%Pятерочка%')
+  AND op_type = 'Debit'
+  AND op_time >= '2023-12-01'
+  AND op_time < '2024-01-01';",0.6472602739726028,False,Column mismatch
+в каких супермаркетах я закупалась едой в апреле?,"SELECT
+  brand,
+  description,
+  amount_value,
+  op_time
+FROM
+  operations_cte
+WHERE
+  category = 'Супермаркеты'
+  AND op_type = 'Debit'
+  AND op_time >= '2024-04-01'
+  AND op_time < '2024-05-01';","SELECT
+  amount_value,
+  description,
+  brand,
+  op_time
+FROM
+  operations_cte
+WHERE
+  category = 'Супермаркеты'
+  AND op_type = 'Debit'
+  AND op_time >= '2024-04-01'
+  AND op_time < '2024-05-01';",0.9336734693877551,False,Row mismatch
+Сколько я потратила на супермаркеты на выходных в марте?,"SELECT
+  amount_value,
+  description,
+  category,
+  op_time
+FROM
+  operations_cte
+WHERE
+  category = 'Супермаркеты'
+  AND op_type = 'Debit'
+  AND op_time >= '2024-03-01'
+  AND op_time < '2024-04-01'
+  AND EXTRACT(DOW from op_time) IN (6, 0);","SELECT
+  amount_value,
+  description,
+  category,
+  op_time
+FROM
+  operations_cte
+WHERE
+  category = 'Супермаркеты'
+  AND op_type = 'Debit'
+  AND op_time >= '2024-03-01'
+  AND op_time < '2024-04-01'
+  AND EXTRACT(DOW FROM op_time) IN (6, 0);",0.983402489626556,True,
+Последняя покупка на вб,"SELECT
+  amount_value,
+  description,
+  category,
+  op_time
+FROM
+  operations_cte
+WHERE
+  brand ILIKE '%Wildberries%'
+  AND op_type = 'Debit'
+ORDER BY op_time DESC
+LIMIT 1;","SELECT
+  amount_value,
+  description,
+  category,
+  op_time
+FROM
+  operations_cte
+WHERE
+  (brand ILIKE '%ВБ%'
+  OR brand ILIKE '%WB%'
+  OR brand ILIKE '%Wildberries%'
+  OR brand ILIKE '%Вайлдберрис%'
+  OR brand ILIKE '%Вильдберриз%')
+  AND op_type = 'Debit'
+ORDER BY op_time DESC
+LIMIT 1;",0.7478260869565218,True,
+Сколько я заплатила в Семейном докторе в сентябре?,"SELECT
+  amount_value,
+  description,
+  category,
+  op_time
+FROM
+  operations_cte
+WHERE
+  (brand ILIKE '%Семейный доктор%'
+  OR brand ILIKE '%Semejnyj doktor%')
+  AND op_type = 'Debit'
+  AND op_time >= '2023-09-01'
+  AND op_time < '2023-10-01';","SELECT
+  amount_value,
+  description,
+  category,
+  op_time
+FROM
+  operations_cte
+WHERE
+  (brand ILIKE '%Семейный доктор%' OR brand ILIKE '%Family Doctor%' OR brand ILIKE '%Semejnyj doktor%')
+  AND op_type = 'Debit'
+  AND op_time >= '2023-09-01'
+  AND op_time < '2023-10-01';",0.9325626204238922,True,
+Сколько я потратила на рестораны за 7 предыдущих месяцев?,"SELECT
+  amount_value,
+  description,
+  category,
+  op_time
+FROM
+  operations_cte
+WHERE
+  category = 'Рестораны'
+  AND op_type = 'Debit'
+  AND op_time >= CURRENT_DATE - INTERVAL '7 month'
+  AND op_time < DATE_TRUNC('month', CURRENT_DATE);","SELECT
+  amount_value,
+  description,
+  category,
+  op_time
+FROM
+  operations_cte
+WHERE
+  category = 'Рестораны'
+  AND op_type = 'Debit'
+  AND op_time >= CURRENT_DATE - INTERVAL '7 months'
+  AND op_time < CURRENT_DATE;",0.9035087719298246,True,
+Когда в марте я платила за MTS?,"SELECT
+  amount_value,
+  description,
+  category,
+  op_time
+FROM
+  operations_cte
+WHERE
+  (brand ILIKE '%MTS%' 
+  OR brand ILIKE '%МТС%')
+  AND op_type = 'Debit'
+  AND op_time >= '2024-03-01'
+  AND op_time < '2024-04-01';","SELECT
+  amount_value,
+  description,
+  category,
+  op_time
+FROM
+  operations_cte
+WHERE
+  (brand ILIKE '%MTS%' OR brand ILIKE '%mts%')
+  AND op_type = 'Debit'
+  AND op_time >= '2024-03-01'
+  AND op_time < '2024-04-01';",0.979498861047836,False,Row mismatch
+Сколько я потратила за яндекс музыку в марте?,"SELECT
+  amount_value,
+  description,
+  category,
+  op_time,
+  brand
+FROM
+  operations_cte
+WHERE
+  (brand ILIKE '%Яндекс.Музыка%'
+  OR brand ILIKE '%Яндекс музыка%'
+  OR brand ILIKE '%Yandex music%'
+  OR brand ILIKE '%Yandex.Music%')
+  AND op_type = 'Debit'
+  AND op_time >= '2024-03-01'
+  AND op_time < '2024-04-01';","SELECT
+  amount_value,
+  description,
+  category,
+  op_time
+FROM
+  operations_cte
+WHERE
+  (brand ILIKE '%Яндекс Музыка%'
+  OR brand ILIKE '%Yandex Music%')
+  AND op_type = 'Debit'
+  AND op_time >= '2024-03-01'
+  AND op_time < '2024-04-01';",0.8561151079136691,False,Column mismatch
+Сколько я промотала денег на озон в прошлом сезоне?,"SELECT
+  amount_value,
+  description,
+  category,
+  op_time
+FROM
+  operations_cte
+WHERE
+  (brand ILIKE '%Озон%' OR brand ILIKE '%Ozon%')
+  AND op_type = 'Debit'
+  AND op_time >= '2024-03-01'
+  AND op_time < '2024-06-01';","SELECT
+  SUM(amount_value) AS total_spent,
+  COUNT(*) AS number_of_transactions
+FROM
+  operations_cte
+WHERE
+  (brand ILIKE '%Озон%' OR brand ILIKE '%Ozon%')
+  AND op_type = 'Debit'
+  AND op_time >= '2023-06-01'
+  AND op_time < '2023-09-01';",0.7869565217391304,False,Column mismatch
+Сколько раз в декабре я покупал в Яндекс Лавке?,"SELECT
+  COUNT(*) AS operation_count
+FROM
+  operations_cte
+WHERE
+  (brand ILIKE '%Яндекс Лавка%'
+  OR brand ILIKE '%Yandex Lavka%')
+  AND op_type = 'Debit'
+  AND op_time >= '2023-12-01'
+  AND op_time < '2024-01-01';","SELECT
+  COUNT(*) AS purchase_count
+FROM
+  operations_cte
+WHERE
+  (brand ILIKE '%Яндекс Лавка%'
+   OR brand ILIKE '%Yandex Lavka%')
+  AND op_type = 'Debit'
+  AND op_time >= '2023-12-01'
+  AND op_time < '2024-01-01';",0.958139534883721,False,Column mismatch
+Сколько раз я оплачивал такси с 04.03 по 14.03?,"SELECT
+  COUNT(*) AS operation_count
+FROM
+  operations_cte
+WHERE
+  category = 'Такси'
+  AND op_type = 'Debit'
+  AND op_time >= '2024-03-04'
+  AND op_time <= '2024-03-14';","SELECT
+  COUNT(*) AS taxi_payment_count
+FROM
+  operations_cte
+WHERE
+  category = 'Такси'
+  AND op_type = 'Debit'
+  AND op_time BETWEEN '2024-03-04' AND '2024-03-14';",0.8895522388059701,False,Column mismatch
+Во сколько мне обошелся транспорт в прошлом году?,"SELECT
+  amount_value,
+  description,
+  category,
+  op_time
+FROM
+  operations_cte
+WHERE
+  (category = 'Транспорт' OR category = 'Местный транспорт')
+  AND op_type = 'Debit'
+  AND op_time >= '2023-01-01'
+  AND op_time < '2024-01-01';","SELECT
+  SUM(amount_value) AS total_transport_cost,
+  AVG(amount_value) AS average_transport_cost,
+  MIN(amount_value) AS min_transport_cost,
+  MAX(amount_value) AS max_transport_cost
+FROM
+  operations_cte
+WHERE
+  category = 'Транспорт'
+  AND op_type = 'Debit'
+  AND op_time >= '2023-01-01'
+  AND op_time < '2024-01-01';",0.6086956521739131,False,Column mismatch
+Сколько я потратила на покупки в озоне с 15 марта по 30 апреля?,"SELECT
+  amount_value,
+  description,
+  category,
+  op_time
+FROM
+  operations_cte
+WHERE
+  (brand ILIKE '%Озон%' OR brand ILIKE '%Ozon%')
+  AND op_type = 'Debit'
+  AND op_time >= '2024-03-15'
+  AND op_time <= '2024-04-30';","SELECT
+  SUM(amount_value) AS total_spent,
+  AVG(amount_value) AS average_purchase,
+  MIN(op_time) AS first_purchase_date,
+  MAX(op_time) AS last_purchase_date
+FROM
+  operations_cte
+WHERE
+  (brand ILIKE '%Озон%' OR brand ILIKE '%Ozon%' OR brand ILIKE '%OZON%')
+  AND op_type = 'Debit'
+  AND op_time >= '2023-03-15'
+  AND op_time < '2023-05-01';",0.6407079646017699,False,Column mismatch
+Когда последний раз присылали стипендию,"SELECT
+  amount_value,
+  description,
+  category,
+  op_time
+FROM
+  operations_cte
+WHERE
+  category = 'Зарплата'
+  AND op_type = 'Credit'
+ORDER BY
+  op_time DESC
+LIMIT 1;","SELECT
+  amount_value,
+  description,
+  op_time
+FROM
+  operations_cte
+WHERE
+  category = 'Стипендии'
+  AND op_type = 'Credit'
+ORDER BY op_time DESC
+LIMIT 1;",0.9107692307692308,False,Column mismatch
+Посчитай мой среднемесячный доход за этот год.,"SELECT
+  SUM(amount_value) AS monthly_income,
+  DATE_TRUNC('month', op_time) AS month
+FROM
+  operations_cte
+WHERE
+  category = 'Зарплата'
+  AND op_type = 'Credit'
+  AND op_time >= DATE_TRUNC('year', CURRENT_DATE)
+  AND op_time < DATE_TRUNC('month', CURRENT_DATE)
+GROUP BY
+  DATE_TRUNC('month', op_time);","SELECT
+  SUM(amount_value) AS monthly_income,
+  DATE_TRUNC('month', op_time) AS month
+FROM
+  operations_cte
+WHERE
+  op_type = 'Credit'
+  AND op_time >= DATE_TRUNC('year', CURRENT_DATE)
+  AND op_time < DATE_TRUNC('year', CURRENT_DATE) + INTERVAL '1 year'
+GROUP BY
+  month
+ORDER BY
+  month;",0.7648054145516074,False,Row mismatch
+Сколько я потратила в аптеках с 3 по 16 февраля?,"SELECT
+  amount_value,
+  description,
+  category,
+  op_time
+FROM
+  operations_cte
+WHERE
+  category = 'Аптеки'
+  AND op_type = 'Debit'
+  AND op_time >= '2024-02-03'
+  AND op_time <= '2024-02-16';","SELECT
+  SUM(amount_value) AS total_spent,
+  AVG(amount_value) AS average_transaction,
+  MIN(amount_value) AS min_transaction,
+  MAX(amount_value) AS max_transaction
+FROM
+  operations_cte
+WHERE
+  (brand ILIKE '%Аптека%'
+   OR brand ILIKE '%Pharmacy%'
+   OR brand ILIKE '%Apotek%')
+  AND op_type = 'Debit'
+  AND op_time >= '2024-02-03'
+  AND op_time <= '2024-02-16';",0.6153846153846154,False,Column mismatch
+Сколько в среднем я снимаю с карты наличных в неделю?,"SELECT
+  SUM(amount_value) AS weekly_spent,
+  DATE_TRUNC('week', op_time) AS week
+FROM
+  operations_cte
+WHERE
+  category = 'Наличные'
+  AND op_type = 'Debit'
+  AND op_time >= DATE_TRUNC('week', CURRENT_DATE - INTERVAL '24 week')
+  AND op_time < DATE_TRUNC('week', CURRENT_DATE)
+GROUP BY
+  week;","SELECT
+    SUM(amount_value) AS weekly_withdrawals,
+    DATE_TRUNC('week', op_time) AS week
+FROM
+    operations_cte
+WHERE
+    category = 'Наличные'
+    AND op_type = 'Debit'
+    AND op_time >= DATE_TRUNC('week', CURRENT_DATE - INTERVAL '24 week')
+    AND op_time < DATE_TRUNC('week', CURRENT_DATE)
+GROUP BY
+    week;",0.9442622950819672,False,Column mismatch
+Сколько я потратила на Яндекс такси в феврале 2024?,"SELECT
+  amount_value,
+  description,
+  category,
+  op_time
+FROM
+  operations_cte
+WHERE
+  category = 'Такси'
+  AND (brand ILIKE '%Яндекс Такси%' OR brand ILIKE '%Яндекс.Такси%' OR brand ILIKE '%Yandex Taxi%' OR brand ILIKE '%Yandex.Taxi%')
+  AND op_type = 'Debit'
+  AND op_time >= '2024-02-01'
+  AND op_time < '2024-03-01';","SELECT
+  amount_value,
+  description,
+  category,
+  op_time
+FROM
+  operations_cte
+WHERE
+  (brand ILIKE '%Яндекс такси%'
+  OR brand ILIKE '%Yandex Taxi%'
+  OR brand ILIKE '%Яндекс Такси%')
+  AND op_type = 'Debit'
+  AND op_time >= '2024-02-01'
+  AND op_time < '2024-03-01';",0.7878787878787878,True,
+Когда последний раз была зарплата?,"SELECT
+  amount_value,
+  description,
+  category,
+  op_time
+FROM
+  operations_cte
+WHERE
+  category = 'Зарплата'
+  AND op_type = 'Credit'
+ORDER BY op_time DESC
+LIMIT 1;","SELECT
+  amount_value,
+  description,
+  category,
+  op_time
+FROM
+  operations_cte
+WHERE
+  category = 'Зарплаты'
+  AND op_type = 'Credit'
+ORDER BY op_time DESC
+LIMIT 1;",0.9940119760479041,False,Row mismatch
+Как много я потратил в марте на Яндекс.такси? ,"SELECT
+  amount_value,
+  description,
+  category,
+  op_time
+FROM
+  operations_cte
+WHERE
+  category = 'Такси'
+  AND (brand ILIKE '%Яндекс Такси%' OR brand ILIKE '%Яндекс.Такси%' OR brand ILIKE '%Yandex Taxi%' OR brand ILIKE '%Yandex.Taxi%')
+  AND op_type = 'Debit'
+  AND op_time >= '2024-03-01'
+  AND op_time <= '2024-04-01';","SELECT
+  SUM(amount_value) AS total_spent,
+  DATE_TRUNC('month', op_time) AS month
+FROM
+  operations_cte
+WHERE
+  (brand ILIKE '%Яндекс.Такси%' 
+   OR brand ILIKE '%Yandex.Taxi%'
+   OR brand ILIKE '%YANDEX TAXI%'
+   OR brand ILIKE '%яндекс.такси%')
+  AND op_type = 'Debit'
+  AND op_time >= '2024-03-01'
+  AND op_time < '2024-04-01'
+GROUP BY
+  month;",0.6071428571428571,False,Column mismatch
+Сколько раз в среднем в месяц я снимаю наличку в 2024?,"SELECT
+  EXTRACT(MONTH FROM op_time) AS month,
+  COUNT(*) AS cash_withdrawals_count
+FROM
+  operations_cte
+WHERE
+  category = 'Наличные'
+  AND op_type = 'Debit'
+  AND EXTRACT(YEAR FROM op_time) = 2024
+GROUP BY
+  month;","SELECT AVG(operations_per_month) AS average_withdrawals_per_month
+FROM (
+  SELECT COUNT(*) AS operations_per_month
+  FROM operations_cte
+  WHERE op_type = 'Debit'
+    AND description LIKE '%наличка%'
+    AND EXTRACT(YEAR FROM op_time) = 2024
+  GROUP BY EXTRACT(MONTH FROM op_time)
+) AS monthly_operations;",0.4061302681992337,False,Column mismatch
+Сколько я получила переводов на свой счет с 6 марта по 9 июня?,"SELECT
+  COUNT(*) AS operation_count
+FROM
+  operations_cte
+WHERE
+  category = 'Переводы'
+  AND op_type = 'Credit'
+  AND op_time BETWEEN '2024-03-06' AND '2024-06-09';","SELECT
+  SUM(amount_value) AS total_received_amount,
+  MIN(op_time) AS first_transfer_time,
+  MAX(op_time) AS last_transfer_time
+FROM
+  operations_cte
+WHERE
+  category = 'Переводы'
+  AND op_type = 'Credit'
+  AND op_time >= '2023-03-06'
+  AND op_time <= '2023-06-09';",0.6712962962962963,False,Column mismatch
+Сколько я потратила на такси в первый месяц весны?,"SELECT
+  amount_value,
+  description,
+  category,
+  op_time
+FROM
+  operations_cte
+WHERE
+  category = 'Такси'
+  AND op_type = 'Debit'
+  AND op_time >= '2024-03-01'
+  AND op_time < '2024-04-01';","SELECT
+  amount_value,
+  description,
+  category,
+  op_time
+FROM
+  operations_cte
+WHERE
+  category = 'Такси'
+  AND op_type = 'Debit'
+  AND op_time >= '2024-03-01'
+  AND op_time < '2024-04-01';",1.0,True,
+Сколько в среднем я снимала наличных с карты в 2024 году?,"SELECT
+    SUM(amount_value) AS monthly_spent,
+    DATE_TRUNC('month', op_time) AS month
+FROM
+    operations_cte
+WHERE
+    category = 'Наличные'
+    AND op_type = 'Debit'
+    AND EXTRACT(YEAR FROM op_time) = 2024
+    AND op_time < DATE_TRUNC('month', CURRENT_DATE)
+GROUP BY
+    month;","SELECT AVG(amount_value) AS average_cash_withdrawal
+FROM operations_cte
+WHERE op_type = 'Debit'
+  AND description LIKE '%наличных%'
+  AND op_time >= '2024-01-01'
+  AND op_time < '2025-01-01';",0.36210526315789476,False,Column mismatch
+Каков мой средний недельный заработок за последние шесть месяцев?,"SELECT
+  SUM(amount_value) AS weekly_total_income,
+  DATE_TRUNC('week', op_time) AS week
+FROM
+  operations_cte
+WHERE
+  category = 'Зарплата'
+  AND op_type = 'Credit'
+  AND op_time >= CURRENT_DATE - INTERVAL '24 week'
+  AND op_time < DATE_TRUNC('week', CURRENT_DATE)
+GROUP BY
+  week;",,0.0,False,500 Server Error: Internal Server Error for url: http://127.0.0.1:8000/text2sql
+Сколько я последний раз заплатила по автокредиту?,"SELECT
+  amount_value,
+  description,
+  category,
+  op_time
+FROM
+  operations_cte
+WHERE
+  category = 'Кредиты'
+  AND op_type = 'Debit'
+ORDER BY
+  op_time DESC
+LIMIT 1;","SELECT
+  amount_value,
+  description,
+  category,
+  op_time
+FROM
+  operations_cte
+WHERE
+  category = 'Кредиты'
+  AND op_type = 'Debit'
+ORDER BY
+  op_time DESC
+LIMIT 1;",1.0,True,
+На билайн сколько затрачено тысяч с 3 октября по 4 января,"SELECT
+  amount_value,
+  description,
+  category,
+  op_time
+FROM
+  operations_cte
+WHERE
+  (brand ILIKE '%Билайн%' 
+  OR brand ILIKE '%Beeline%')
+  AND op_type = 'Debit'
+  AND op_time >= '2023-10-03'
+  AND op_time <= '2024-01-04';","SELECT
+  SUM(amount_value) / 1000 AS total_spent_in_thousands
+FROM
+  operations_cte
+WHERE
+  (brand ILIKE '%Билайн%' 
+   OR brand ILIKE '%Beeline%')
+  AND op_type = 'Debit'
+  AND op_time >= '2023-10-03'
+  AND op_time <= '2024-01-04';",0.8329718004338394,False,Column mismatch
+Какая сумма погашения кредита была последняя,"SELECT
+  amount_value,
+  description,
+  category,
+  op_time
+FROM
+  operations_cte
+WHERE
+  category = 'Кредиты'
+  AND op_type = 'Debit'
+ORDER BY op_time DESC
+LIMIT 1;","SELECT
+  amount_value,
+  description,
+  op_time
+FROM
+  operations_cte
+WHERE
+  category = 'Погашение кредита'
+  AND op_type = 'Credit'
+ORDER BY
+  op_time DESC
+LIMIT 1;",0.9003021148036254,False,Column mismatch
+Покажи самый свежий чек в Сабвее,"SELECT
+  amount_value,
+  description,
+  category,
+  op_time
+FROM
+  operations_cte
+WHERE
+  (brand ILIKE '%Сабвей%'
+  OR brand ILIKE '%Subway%')
+ORDER BY op_time DESC
+LIMIT 1;","SELECT
+  amount_value,
+  description,
+  category,
+  op_time
+FROM
+  operations_cte
+WHERE
+  (brand ILIKE '%Сабве%'
+  OR brand ILIKE '%Sabve%'
+  OR brand ILIKE '%Сабвэ%'
+  OR brand ILIKE '%Sabvë%')
+  AND op_type = 'Debit'
+ORDER BY op_time DESC
+LIMIT 1;",0.7962085308056872,False,Row mismatch
+Сколько раз я закупалась в горздраве в марте?,"SELECT
+  COUNT(*) AS operation_count
+FROM
+  operations_cte
+WHERE
+  (brand ILIKE '%Горздрав%'
+  OR brand ILIKE '%Gorzdrav%')
+  AND op_type = 'Debit'
+  AND op_time >= DATE '2024-03-01'
+  AND op_time < DATE '2024-04-01';","SELECT
+  COUNT(*) AS visit_count
+FROM
+  operations_cte
+WHERE
+  (brand ILIKE '%Горздрав%' OR brand ILIKE '%GorZdrav%')
+  AND op_type = 'Debit'
+  AND op_time >= '2024-03-01'
+  AND op_time < '2024-04-01';",0.9330143540669856,False,Column mismatch
+Сколько раз я ездила на такси за последние 100 дней?,"SELECT
+  COUNT(*) AS operation_count
+FROM
+  operations_cte
+WHERE
+  category = 'Такси'
+  AND op_type = 'Debit'
+  AND op_time >= CURRENT_DATE - INTERVAL '100 days';","SELECT
+  COUNT(*) AS taxi_trips_count
+FROM
+  operations_cte
+WHERE
+  category = 'Такси'
+  AND op_type = 'Debit'
+  AND op_time >= CURRENT_DATE - INTERVAL '100 days';",0.9538461538461539,False,Column mismatch
+Сколько денег в среднем я трачу в месяц в супермаркетах?,"SELECT
+  SUM(amount_value) AS monthly_spent,
+  DATE_TRUNC('month', op_time) AS month
+FROM
+  operations_cte
+WHERE
+  category = 'Супермаркеты'
+  AND op_type = 'Debit'
+  AND op_time >= DATE_TRUNC('month', CURRENT_DATE - INTERVAL '6 month')
+  AND op_time < DATE_TRUNC('month', CURRENT_DATE)
+GROUP BY
+  month;","SELECT
+  AVG(amount_value) AS average_monthly_spent,
+  DATE_TRUNC('month', op_time) AS month
+FROM
+  operations_cte
+WHERE
+  category = 'Супермаркеты'
+  AND op_type = 'Debit'
+  AND op_time >= DATE_TRUNC('month', CURRENT_DATE - INTERVAL '12 month')
+  AND op_time < DATE_TRUNC('month', CURRENT_DATE)
+GROUP BY
+  month;",0.9724473257698542,False,Column mismatch
+Сколько в последний раз я потратила денег на еду,"SELECT
+  amount_value,
+  description,
+  category,
+  brand,
+  op_time
+FROM
+  operations_cte
+WHERE
+  (category = 'Рестораны' OR category = 'Фастфуд' OR category = 'Супермаркеты')
+  AND op_type = 'Debit'
+ORDER BY op_time DESC
+LIMIT 1;",,0.0,False,500 Server Error: Internal Server Error for url: http://127.0.0.1:8000/text2sql
+Сколько я потратила на красоту прошлым летом?,"SELECT
+  amount_value,
+  description,
+  category,
+  op_time
+FROM
+  operations_cte
+WHERE
+  category = 'Красота'
+  AND op_type = 'Debit'
+  AND op_time >= '2023-06-01'
+  AND op_time <= '2023-09-01';","SELECT
+  SUM(amount_value) AS total_spent,
+  AVG(amount_value) AS average_spending,
+  MIN(amount_value) AS min_spending,
+  MAX(amount_value) AS max_spending,
+  COUNT(*) AS number_of_transactions
+FROM
+  operations_cte
+WHERE
+  (brand ILIKE '%Ухоженность%' OR brand ILIKE '%Красота%' OR brand ILIKE '%Cosmetics%' OR brand ILIKE '%Makeup%')
+  AND op_type = 'Debit'
+  AND op_time >= '2023-06-01'
+  AND op_time < '2023-09-01';",0.5495934959349593,False,Column mismatch
+Какую сумму потратил с 01.03 по 16.04 в Леонардо?,"SELECT
+  amount_value,
+  description,
+  category,
+  op_time
+FROM
+  operations_cte
+WHERE
+  (brand ILIKE '%Леонардо%' 
+  OR brand ILIKE '%Leonardo%')
+  AND op_type = 'Debit'
+  AND op_time >= '2024-03-01'
+  AND op_time <= '2024-04-16';","SELECT
+  SUM(amount_value) AS total_spent
+FROM
+  operations_cte
+WHERE
+  (brand ILIKE '%Леонардо%' OR brand ILIKE '%Leonardo%')
+  AND op_type = 'Debit'
+  AND op_time BETWEEN '2023-03-01' AND '2024-04-16';",0.7770114942528735,False,Column mismatch
+Сколько раз я ходила в фастфуды в марте?,"SELECT
+  COUNT(*) AS operation_count
+FROM
+  operations_cte
+WHERE
+  category = 'Фастфуд'
+  AND op_type = 'Debit'
+  AND op_time >= '2024-03-01'
+  AND op_time < '2024-04-01';","SELECT COUNT(*) AS visits_to_fast_food
+FROM operations_cte
+WHERE category = 'Фастфуд'
+  AND op_type = 'Debit'
+  AND op_time >= '2024-03-01'
+  AND op_time < '2024-04-01';",0.8941176470588236,False,Column mismatch
+"Сколько денег я потратила в аптеке 36,6 осенью 2023?","SELECT
+  amount_value,
+  description,
+  category,
+  op_time
+FROM
+  operations_cte
+WHERE
+  (brand ILIKE '%Аптека 36,6%'
+  OR brand ILIKE '%Apteka 36,6%'
+  OR brand ILIKE '%Pharmacy 36.6%')
+  AND op_type = 'Debit'
+  AND op_time >= '2023-09-01'
+  AND op_time < '2023-12-01';","SELECT
+  SUM(amount_value) AS total_spent,
+  description,
+  category,
+  op_time
+FROM
+  operations_cte
+WHERE
+  (brand ILIKE '%Аптека 36,6%'
+   OR brand ILIKE '%Apteka 36,6%'
+   OR brand ILIKE '%Pharmacy 36.6%')
+  AND op_type = 'Debit'
+  AND op_time >= '2023-09-01'
+  AND op_time < '2023-12-01'
+GROUP BY
+  description,
+  category,
+  op_time;",0.8885245901639345,False,Column mismatch
+Сколько денег у меня ушло с 1 по 31 марта на такси?,"SELECT
+  amount_value,
+  description,
+  category,
+  op_time
+FROM
+  operations_cte
+WHERE
+  category = 'Такси'
+  AND op_type = 'Debit'
+  AND op_time >= '2024-03-01'
+  AND op_time <= '2024-03-31';","SELECT
+  SUM(amount_value) AS total_spent,
+  DATE_TRUNC('month', op_time) AS month
+FROM
+  operations_cte
+WHERE
+  category = 'Такси'
+  AND op_type = 'Debit'
+  AND op_time >= '2024-03-01'
+  AND op_time <= '2024-03-31'
+GROUP BY
+  month;",0.8028169014084507,False,Column mismatch
+Когда я в марте платила по кредиту за машину?,"SELECT
+  amount_value,
+  description,
+  category,
+  op_time
+FROM
+  operations_cte
+WHERE
+  category = 'Кредиты'
+  AND op_type = 'Debit'
+  AND op_time >= '2024-03-01'
+  AND op_time < '2024-04-01';","SELECT
+  amount_value,
+  description,
+  category,
+  op_time
+FROM
+  operations_cte
+WHERE
+  category = 'Платежи и комиссии'
+  AND op_type = 'Debit'
+  AND description LIKE '%Машина%'
+  AND op_time >= '2023-03-01'
+  AND op_time < '2023-04-01';",0.859122401847575,False,Row mismatch
+Сколько я потратила денег на покупку лекарств в феврале и марте?,"SELECT
+  amount_value,
+  description,
+  category,
+  op_time
+FROM
+  operations_cte
+WHERE
+  category = 'Аптеки'
+  AND op_type = 'Debit'
+  AND op_time >= '2024-02-01'
+  AND op_time < '2024-04-01';","SELECT
+  amount_value,
+  description,
+  category,
+  op_time
+FROM
+  operations_cte
+WHERE
+  (category = 'Лекарства' OR category = 'Аптеки')
+  AND op_type = 'Debit'
+  AND op_time >= '2024-02-01'
+  AND op_time < '2024-04-01';",0.9323671497584541,True,
+Какую сумму я потратил с 15.11.2023 по 30.11.2023 на рестораны?,"SELECT
+  amount_value,
+  description,
+  category,
+  op_time
+FROM
+  operations_cte
+WHERE
+  category = 'Рестораны'
+  AND op_type = 'Debit'
+  AND op_time >= '2023-11-15'
+  AND op_time <= '2023-11-30';","SELECT
+  SUM(amount_value) AS total_spent,
+  AVG(amount_value) AS average_spent,
+  MIN(amount_value) AS min_spent,
+  MAX(amount_value) AS max_spent
+FROM
+  operations_cte
+WHERE
+  category = 'Рестораны'
+  AND op_type = 'Debit'
+  AND op_time >= '2023-11-15'
+  AND op_time < '2023-12-01';",0.7234927234927235,False,Column mismatch
+За неделю у меня какое количество среднее трат на кинотеатры?,"SELECT
+  SUM(amount_value) AS weekly_spent,
+  DATE_TRUNC('week', op_time) AS week
+FROM
+  operations_cte
+WHERE
+  category = 'Кино'
+  AND op_type = 'Debit'
+  AND op_time >= DATE_TRUNC('week', CURRENT_DATE - INTERVAL '24 week')
+  AND op_time < DATE_TRUNC('week', CURRENT_DATE)
+GROUP BY
+  week;","SELECT
+  AVG(amount_value) AS average_weekly_spent,
+  DATE_TRUNC('week', op_time) AS week
+FROM
+  operations_cte
+WHERE
+  category = 'Кино'
+  AND op_type = 'Debit'
+  AND op_time >= DATE_TRUNC('week', CURRENT_DATE - INTERVAL '24 week')
+  AND op_time < DATE_TRUNC('week', CURRENT_DATE)
+GROUP BY
+  week;",0.9761904761904762,False,Column mismatch
+Сколько раз мне приходила получка с января по март,"SELECT
+  COUNT(*) AS salary_count
+FROM
+  operations_cte
+WHERE
+  category = 'Зарплата'
+  AND op_type = 'Credit'
+  AND op_time >= '2024-01-01'
+  AND op_time < '2024-04-01';","SELECT COUNT(*)
+FROM operations_cte
+WHERE category = 'Получка'
+  AND op_type = 'Credit'
+  AND op_time >= '2024-01-01'
+  AND op_time < '2024-04-01';",0.8958990536277602,False,Column mismatch
+Сколько ушло на косметику в с 17 по 29 января?,"SELECT
+  amount_value,
+  description,
+  category,
+  op_time
+FROM
+  operations_cte
+WHERE
+  category = 'Косметика'
+  AND op_type = 'Debit'
+  AND op_time >= '2023-01-17'
+  AND op_time < '2024-01-29';","SELECT
+  amount_value,
+  description,
+  category,
+  op_time
+FROM
+  operations_cte
+WHERE
+  category = 'Косметика'
+  AND op_type = 'Debit'
+  AND op_time >= '2024-01-17'
+  AND op_time <= '2024-01-29';",0.9923664122137404,False,Row mismatch
+Сколько денег мне в среднем переводят в неделю?,"SELECT
+  SUM(amount_value) AS weekly_total_income,
+  DATE_TRUNC('week', op_time) AS week
+FROM
+  operations_cte
+WHERE
+  category = 'Переводы'
+  AND op_type = 'Credit'
+  AND op_time >= CURRENT_DATE - INTERVAL '24 week'
+  AND op_time < DATE_TRUNC('week', CURRENT_DATE)
+GROUP BY
+  week;","SELECT
+  SUM(amount_value) AS weekly_received,
+  DATE_TRUNC('week', op_time) AS week
+FROM
+  operations_cte
+WHERE
+  category = 'Переводы'
+  AND op_type = 'Credit'
+  AND op_time >= DATE_TRUNC('week', CURRENT_DATE - INTERVAL '24 week')
+  AND op_time < DATE_TRUNC('week', CURRENT_DATE)
+GROUP BY
+  week;",0.9344827586206896,False,Column mismatch
+Кому последний денежный перевод по карте был сделан?,"SELECT
+  amount_value,
+  description,
+  category,
+  op_time
+FROM
+  operations_cte
+WHERE
+  category = 'Переводы'
+  AND op_type = 'Debit'
+ORDER BY op_time DESC;","SELECT
+  amount_value,
+  description,
+  category,
+  op_time,
+  card
+FROM
+  operations_cte
+WHERE
+  category = 'Переводы'
+  AND op_type = 'Debit'
+ORDER BY op_time DESC
+LIMIT 1;",0.9518072289156626,False,Column mismatch
+Сколько я потратила на фастфуд с 20 по 31 марта?,"SELECT
+  amount_value,
+  description,
+  category,
+  op_time
+FROM
+  operations_cte
+WHERE
+  category = 'Фастфуд'
+  AND op_type = 'Debit'
+  AND op_time >= '2024-03-20'
+  AND op_time <= '2024-03-31';","SELECT
+  amount_value,
+  description,
+  category,
+  op_time
+FROM
+  operations_cte
+WHERE
+  category = 'Фастфуд'
+  AND op_type = 'Debit'
+  AND op_time >= '2024-03-20'
+  AND op_time <= '2024-03-31';",1.0,True,
+Сколько раз я снимал наличку с карты за последние полгода?,"SELECT
+  COUNT(*) AS cash_withdrawals_count
+FROM
+  operations_cte
+WHERE
+  category = 'Наличные'
+  AND op_type = 'Debit'
+  AND op_time >= CURRENT_DATE - INTERVAL '6 months';","SELECT
+  COUNT(*) AS count_withdrawals
+FROM
+  operations_cte
+WHERE
+  category = 'Наличные'
+  AND op_type = 'Debit'
+  AND op_time >= CURRENT_DATE - INTERVAL '6 months';",0.9616519174041298,False,Column mismatch
+Сколько денег в среднем мне приходит на счет в первую неделю каждого месяца?,"SELECT
+  DATE_TRUNC('month', op_time) AS month,
+  SUM(amount_value) AS total_income_at_first_week
+FROM
+  operations_cte
+WHERE
+  op_type = 'Credit'
+  AND op_time >= DATE_TRUNC('month', CURRENT_DATE - INTERVAL '6 month')
+  AND op_time < DATE_TRUNC('month', CURRENT_DATE)
+  AND EXTRACT(DAY FROM op_time) <= 7
+GROUP BY
+  month;","SELECT
+  AVG(amount_value) AS average_weekly_income,
+  DATE_TRUNC('month', op_time) AS month
+FROM
+  operations_cte
+WHERE
+  op_type = 'Credit'
+  AND op_time >= DATE_TRUNC('year', CURRENT_DATE)
+  AND op_time < DATE_TRUNC('year', CURRENT_DATE) + INTERVAL '1 year'
+GROUP BY
+  month
+ORDER BY
+  month;",0.6181229773462783,False,Column mismatch
+В феврале была покупка для дома. Сколько ушло на неё?,"SELECT
+  amount_value,
+  description,
+  category,
+  op_time
+FROM
+  operations_cte
+WHERE
+  category = 'Дом и ремонт'
+  AND op_type = 'Debit'
+  AND op_time >= '2024-02-01'
+  AND op_time < '2024-03-01';","SELECT
+  amount_value,
+  description,
+  category,
+  op_time
+FROM
+  operations_cte
+WHERE
+  category = 'Дом и ремонт'
+  AND op_type = 'Debit'
+  AND op_time >= '2024-02-01'
+  AND op_time < '2024-03-01';",1.0,True,
+Какую сумму в среднем я трачу на такси в неделю?,"SELECT
+  SUM(amount_value) AS weekly_spent,
+  DATE_TRUNC('week', op_time) AS week
+FROM
+  operations_cte
+WHERE
+  category = 'Такси'
+  AND op_type = 'Debit'
+  AND op_time >= DATE_TRUNC('week', CURRENT_DATE - INTERVAL '24 week')
+  AND op_time < DATE_TRUNC('week', CURRENT_DATE)
+GROUP BY
+  week;","SELECT
+  AVG(amount_value) AS average_weekly_spent
+FROM
+  operations_cte
+WHERE
+  category = 'Такси'
+  AND op_type = 'Debit'
+  AND op_time >= DATE_TRUNC('week', CURRENT_DATE - INTERVAL '24 week')
+  AND op_time < DATE_TRUNC('week', CURRENT_DATE);",0.8710280373831776,False,Column mismatch

@@ -1,5 +1,19 @@
 import requests
+import duckdb
+import pandas as pd
+from difflib import SequenceMatcher
+import logging
 
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(levelname)s - %(message)s",
+    handlers=[
+        logging.StreamHandler(),  # Log to console
+        logging.FileHandler("text2sql_pipeline.log")  # Log to file
+    ],
+    encoding='utf-8'
+)
 class TextToSQLClient:
     def __init__(self, base_url: str):
         """
@@ -29,24 +43,129 @@ class TextToSQLClient:
         except KeyError:
             raise Exception("Ошибка в формате ответа от API.")
 
-# Пример использования клиента
+    def calculate_similarity(self, sql1, sql2):
+        """Calculate similarity between two SQL strings."""
+        similarity = SequenceMatcher(None, sql1, sql2).ratio()
+        logging.info("Calculated similarity: %.2f", similarity)
+        return similarity
+
+    def run_text2sql_pipeline(self, file_path, text2sql_api_url, database_path, output_path):
+        logging.info("Starting Text-to-SQL pipeline.")
+        data = pd.read_excel(file_path)
+        total_queries = len(data)
+        logging.info("Loaded %d queries from file: %s", total_queries, file_path)
+
+        correct_executions = 0
+        similarities = []
+        results = []
+
+        for index, row in data.iterrows():
+            question = row['question']
+            expected_sql = row['correct_sql']
+            logging.info("Processing question: %s", question)
+            count = index + 1
+
+            print(f"Query count - {count}")
+            try:
+                # Step 1: Convert question to SQL
+                response = requests.post(f"{text2sql_api_url}/text2sql", json={"query": question})
+                response.raise_for_status()
+                generated_sql = response.json().get("sql")
+                logging.info("Generated SQL: %s", generated_sql)
+
+                if not generated_sql:
+                    logging.warning("No SQL generated for question: %s", question)
+                    results.append({
+                        "question": question,
+                        "expected_sql": expected_sql,
+                        "generated_sql": None,
+                        "similarity": 0,
+                        "execution_match": False
+                    })
+                    continue
+
+                # Step 2: Calculate similarity
+                similarity = self.calculate_similarity(generated_sql, expected_sql)
+                similarities.append(similarity)
+
+                # Step 3: Execute and compare results
+                with duckdb.connect(database_path) as conn:
+                    logging.info("Executing SQL queries on database.")
+                    generated_result_df = conn.execute(generated_sql).fetchdf()
+                    expected_result_df = conn.execute(expected_sql).fetchdf()
+
+                # Compare columns
+                if set(generated_result_df.columns) != set(expected_result_df.columns):
+                    logging.warning("Column mismatch for question: %s", question)
+                    results.append({
+                        "question": question,
+                        "expected_sql": expected_sql,
+                        "generated_sql": generated_sql,
+                        "similarity": similarity,
+                        "execution_match": False,
+                        "error": "Column mismatch"
+                    })
+                    continue
+
+                # Compare rows
+                if not generated_result_df.sort_values(by=generated_result_df.columns.tolist()).reset_index(
+                        drop=True).equals(
+                        expected_result_df.sort_values(by=expected_result_df.columns.tolist()).reset_index(drop=True)
+                ):
+                    logging.warning("Row mismatch for question: %s", question)
+                    results.append({
+                        "question": question,
+                        "expected_sql": expected_sql,
+                        "generated_sql": generated_sql,
+                        "similarity": similarity,
+                        "execution_match": False,
+                        "error": "Row mismatch"
+                    })
+                    continue
+
+                # If both columns and rows match, the execution is correct
+                correct_executions += 1
+                results.append({
+                    "question": question,
+                    "expected_sql": expected_sql,
+                    "generated_sql": generated_sql,
+                    "similarity": similarity,
+                    "execution_match": True
+                })
+
+            except Exception as e:
+                logging.error("Error processing question: %s\nError: %s", question, e)
+                results.append({
+                    "question": question,
+                    "expected_sql": expected_sql,
+                    "generated_sql": None,
+                    "similarity": 0,
+                    "execution_match": False,
+                    "error": str(e)
+                })
+
+        # Step 4: Metrics
+        execution_accuracy = correct_executions / total_queries
+        average_similarity = sum(similarities) / len(similarities) if similarities else 0
+
+        logging.info("Execution Accuracy (EX): %.2f%%", execution_accuracy * 100)
+        logging.info("Average SQL Similarity: %.2f%%", average_similarity * 100)
+
+        # Save results to a file
+        results_df = pd.DataFrame(results)
+        results_df.to_csv(output_path, index=False)
+        logging.info("Results saved to file: %s", output_path)
+
+        print(f"Execution Accuracy (EX): {execution_accuracy:.2%}")
+        print(f"Average SQL Similarity: {average_similarity:.2%}")
+
+
 if __name__ == "__main__":
-    # Замените на ваш URL, если сервер работает на другом хосте или порту
     BASE_URL = "http://127.0.0.1:8000"
 
     client = TextToSQLClient(base_url=BASE_URL)
+    file_path = "../data/test_text2sql_data.xlsx"
+    database_path = "../data/finance_data.duckdb"
+    output_path = "../data/text2sql_results.csv"
 
-    # Пример вопроса
-    questions = [
-        "Какие товары были проданы в январе?",
-        "Сколько пользователей зарегистрировалось в 2024 году?",
-        "Покажи все записи из таблицы users.",
-    ]
-
-    for question in questions:
-        try:
-            sql_query = client.convert_query(query=question)
-            print(f"Вопрос: {question}")
-            print(f"SQL: {sql_query}\n")
-        except Exception as e:
-            print(f"Ошибка обработки вопроса '{question}': {e}")
+    client.run_text2sql_pipeline(file_path,  BASE_URL, database_path, output_path)
