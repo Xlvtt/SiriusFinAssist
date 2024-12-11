@@ -1,0 +1,15 @@
+Jupyter
+langchain
+langgraph
+langchain-community
+langchain-anthropic
+tavily-python
+langgraph-checkpoint-sqlite
+python-dotenv
+gradio_client
+pydantic
+google
+tavily-python
+transformers
+torch
+langchain-openai
