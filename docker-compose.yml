@@ -1,0 +1,30 @@
+version: '3.8'
+
+services:
+  backend:
+    build: 
+      context: ./Backend
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8001"
+    volumes:
+      - ./Backend:/app
+    networks:
+      - app-network
+
+  frontend:
+    build:
+      context: ./APPUI
+      dockerfile: Dockerfile
+    ports:
+      - "8501:8501"
+    volumes:
+      - ./APPUI:/app
+    depends_on:
+      - backend
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
