@@ -11,10 +11,6 @@ from langchain_openai import ChatOpenAI
 from planners import planner, replanner, Response
 from executor import executor_agent
 
-# TODO инфа о мире - строка, ее надо подавать в промт юзера.
-# Date, steps_limit
-# Это надо подавать в экзекутор, репланнер и планнер, но определять в момент задания первого вопроса
-
 
 def get_world_info():
     return f"""
@@ -38,7 +34,9 @@ def executor_step(state: PlanState):
 
     task_formatted = f"""There is some info about current state of the world: {state["world_info"]}.
     For the following plan:
-{plan_str}\n\nYou are tasked with executing step {1}, {task}."""
+{plan_str}\n\nYou are tasked with executing step {1}, {task}.
+    Execute it so that the result is useful for the whole plan.
+    """
     agent_response = executor_agent.invoke(
         {"messages": [("user", task_formatted)]}
     )

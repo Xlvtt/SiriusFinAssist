@@ -28,6 +28,7 @@ class Act(BaseModel):
         "If you need to further use tools to get the answer, use Plan."
     )  # может вернуть финальный ответ или новый план
 
+
 planner_llm = ChatOpenAI()
 planner_prompt = ChatPromptTemplate.from_messages(
     [
@@ -114,4 +115,5 @@ replanner = replanner_prompt | replanner_llm.with_structured_output(Act)
 
 # TODO dynamic few-shot for plans (разметить планы)
 # TODO one-shot replaning example
-
+# репланнер должен добавлять в план последнюю извлеченную информацию
+# Можно что: следовать начальному плану, но помнить, что было сделано
