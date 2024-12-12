@@ -23,6 +23,8 @@ def convert_query(request: QueryRequest):
         print(sql_query)
         return QueryResponse(sql=sql_query)
     except Exception as e:
+        print('ОШИБКА')
+        print(e)
         raise HTTPException(status_code=500, detail=f"Ошибка обработки запроса: {str(e)}")
 
 

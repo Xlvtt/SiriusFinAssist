@@ -6,6 +6,9 @@ import chromadb
 from chromadb.utils import embedding_functions
 from gradio_client import Client
 
+
+from config import USAGE_DATABASE, TEXT2SQL_FEW_SHOT
+
 CHROMADB_DIR = "vector_dbs/text2sql_few-shot"
 chromadb_client = chromadb.PersistentClient(path=CHROMADB_DIR)
 COLLECTION_NAME = "text2sql_few-shot_examples"
@@ -68,14 +71,19 @@ def get_few_shot_examples(query, top_k=5):
     return few_shot_examples
 
 
-def get_random_rows_from_table(db_file: str, table_name: str, n: int = 5):
+def get_rows_with_columns(db_file: str, table_name: str, n: int = 5):
     conn = duckdb.connect(db_file)
 
-    query = f"SELECT * FROM {table_name} LIMIT {n}"
+    column_query = f"PRAGMA table_info({table_name})"
+    columns = [row[1] for row in conn.execute(column_query).fetchall()]
 
+    query = f"SELECT * FROM {table_name} LIMIT {n}"
     result = conn.execute(query).fetchall()
 
-    result_text = "\n".join([str(row) for row in result])
+    column_names = " | ".join(columns)
+    rows_text = "\n".join([" | ".join(map(str, row)) for row in result])
+
+    result_text = f"Columns: {column_names}\n{rows_text}"
 
     conn.close()
 
@@ -103,12 +111,12 @@ def get_database_schema_as_text(db_path: str) -> str:
 
 def get_model_answer(system_prompt: str, user_prompt: str) -> str:
     result = client.predict(
-        query=user_prompt,
-        history=[],
-        system=system_prompt,
-        radio="72B",
-        api_name="/model_chat"
-    )
+                    query=user_prompt,
+                    history=[],
+                    system=system_prompt,
+                    radio="72B",
+                    api_name="/model_chat"
+            )
     text_answer = result[1][0][-1]['text']
     return text_answer
 
@@ -120,26 +128,46 @@ def extract_sql_blocks(text):
 
 
 # Init vector db
-file_path = "data/train_text2sql_data.xlsx"
+file_path = TEXT2SQL_FEW_SHOT
 store_embeddings(file_path)
 
 # Init client for LLM
 client = Client('Qwen/Qwen2.5')
 
 # Get schema from db
-db_file = 'data/finance_data.duckdb'
+db_file = USAGE_DATABASE
 schema_text = get_database_schema_as_text(db_file)
 
 # Get data examples from db
 table_name = 'operations_cte'
-data_samples = get_random_rows_from_table(db_file, table_name)
+data_samples = get_rows_with_columns(db_file, table_name)
+
+text_description = '''Таблица accounts: Содержит информацию о банковских счетах пользователя, включая их идентификатор, тип, валюту и текущий баланс.
+id: Уникальный идентификатор аккаунта в текстовом формате.
+name: Название аккаунта, например, имя пользователя или название счета.
+type: Тип аккаунта, например, дебетовый, кредитный или инвестиционный.
+currency: Валюта счета, например, RUB, USD.
+balance: Текущий баланс счета в числовом формате.
+
+Таблица operations_cte: Содержит подробные записи о транзакциях, включая сумму, категорию, описание и статус операции.
+amount_currency: Валюта операции, например, RUB или другая локальная валюта.
+amount_value: Сумма операции в числовом формате.
+brand: Название торговой марки или организации, связанной с операцией, например, 'Acer', 'Магнит'.
+card: Последние четыре цифры карты, используемой для операции, например '*0117'.
+category: Категория расхода, например, 'Фастфуд', 'Супермаркеты' или 'Переводы'.
+description: Описание операции, например, название магазина или услуги.
+mcc: Код категории продавца (MCC), указывающий на тип торговой точки.
+op_time: Время проведения операции в формате временной метки.
+op_type: Тип операции, 'Debit' (списание) или 'Credit' (зачисление).
+status: Статус операции,'OK' или 'FAILED'.
+'''
 
 
 def text2sql_function(question: str) -> str:
     few_shot_examples = 'Вот тебе примеры:\n'
     few_shot_text2sql_examples = get_few_shot_examples(question)
     for text2sql_example in few_shot_text2sql_examples:
-        few_shot_examples += f'Вопрос: {text2sql_example["document"]}\nSQL: {text2sql_example["sql"]}\n'
+        few_shot_examples += f'Вопрос: {text2sql_example["document"]} SQL: {text2sql_example["sql"]}\n'
 
     few_shot_examples += '\n'
 
@@ -147,13 +175,15 @@ def text2sql_function(question: str) -> str:
     user_prompt = f'''Тебе дана следующая схема базы данных: 
     {schema_text}
 
+    Описание таблиц и колонок:
+    {text_description}
+
     Вот тебе пример данных из таблицы: {table_name}
     {data_samples}
 
     {few_shot_examples}
     Тебе необходимо написать SQL запрос, который достаёт все нужные данные для ответа на следующий вопрос: {question}.
     В качестве ответа напиши только SQL.'''
-    print(user_prompt)
 
     model_answer = get_model_answer(system_prompt, user_prompt)
 
