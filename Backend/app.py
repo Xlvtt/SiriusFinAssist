@@ -33,7 +33,7 @@ async def chat_endpoint(
     message: str = Query(..., description="Сообщение от пользователя")
 ):
     try:
-        respObj = assistant.invoke({"input": message})
+        respObj = assistant.invoke({"input": message, "steps_limit": 10})
         print(str(respObj))
         return respObj
     except Exception as e:
