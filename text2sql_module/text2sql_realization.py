@@ -6,6 +6,9 @@ import chromadb
 from chromadb.utils import embedding_functions
 from gradio_client import Client
 
+
+from config import USAGE_DATABASE, TEXT2SQL_FEW_SHOT
+
 CHROMADB_DIR = "vector_dbs/text2sql_few-shot"
 chromadb_client = chromadb.PersistentClient(path=CHROMADB_DIR)
 COLLECTION_NAME = "text2sql_few-shot_examples"
@@ -125,14 +128,14 @@ def extract_sql_blocks(text):
 
 
 # Init vector db
-file_path = "data/train_text2sql_data.xlsx"
+file_path = TEXT2SQL_FEW_SHOT
 store_embeddings(file_path)
 
 # Init client for LLM
 client = Client('Qwen/Qwen2.5')
 
 # Get schema from db
-db_file = 'data/finance_data.duckdb'
+db_file = USAGE_DATABASE
 schema_text = get_database_schema_as_text(db_file)
 
 # Get data examples from db

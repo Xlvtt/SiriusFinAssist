@@ -5,6 +5,7 @@ import pandas as pd
 from difflib import SequenceMatcher
 import logging
 
+from text2sql_module.config import USAGE_DATABASE
 
 logging.basicConfig(
     level=logging.INFO,
@@ -192,7 +193,7 @@ if __name__ == "__main__":
 
     client = TextToSQLClient(base_url=BASE_URL)
     file_path = "../data/test_text2sql_data.xlsx"
-    database_path = "../data/finance_data.duckdb"
+    database_path = "../" + USAGE_DATABASE
     output_path = "../data/text2sql_results.xlsx"
 
     client.run_text2sql_pipeline(file_path,  BASE_URL, database_path, output_path)
