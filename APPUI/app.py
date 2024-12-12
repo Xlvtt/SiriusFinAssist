@@ -56,6 +56,9 @@ def on_click():
     
     # Ответ бота
     bot_response = client.send_message(user_input)
+
+    if(bot_response.message == 'Error'):
+        bot_response.message += bot_response.error
     clear_text()
     # Добавляем ответ бота
     st.session_state.messages[st.session_state.current_chat].append(

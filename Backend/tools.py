@@ -1,5 +1,5 @@
 from langchain_community.tools import TavilySearchResults
-from text2sql_module.clients.client_text2data import Text2SQLClient
+from Text2SQLClient import Text2SQLClient
 from langchain_community.tools import tool
 from typing import Annotated
 

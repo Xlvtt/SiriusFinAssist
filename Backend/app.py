@@ -1,11 +1,14 @@
 from typing import Optional
 from fastapi import FastAPI, Query
 from pydantic import BaseModel
-import uvicorn
 from fastapi.middleware.cors import CORSMiddleware
 from Qwen import Bot
 
-#from graph import assistant
+from dotenv import load_dotenv
+
+load_dotenv()
+
+from graph import assistant
 
 app = FastAPI()
 
@@ -30,7 +33,8 @@ async def chat_endpoint(
     message: str = Query(..., description="Сообщение от пользователя")
 ):
     try:
-        respObj = ChatResponse(message=bot.get(message)) #assistant.invoke({"input": message})
+        #respObj = ChatResponse(message=bot.get(message))
+        respObj = ChatResponse(message=assistant.invoke({"input": message}))
         print(str(respObj))
         return respObj
     except Exception as e:
