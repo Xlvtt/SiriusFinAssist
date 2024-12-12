@@ -111,7 +111,7 @@ def get_model_answer(system_prompt: str, user_prompt: str) -> str:
                     query=user_prompt,
                     history=[],
                     system=system_prompt,
-                    radio="Coder-7B",
+                    radio="72B",
                     api_name="/model_chat"
             )
     text_answer = result[1][0][-1]['text']
@@ -181,7 +181,6 @@ def text2sql_function(question: str) -> str:
     {few_shot_examples}
     Тебе необходимо написать SQL запрос, который достаёт все нужные данные для ответа на следующий вопрос: {question}.
     В качестве ответа напиши только SQL.'''
-    print(user_prompt)
 
     model_answer = get_model_answer(system_prompt, user_prompt)
 

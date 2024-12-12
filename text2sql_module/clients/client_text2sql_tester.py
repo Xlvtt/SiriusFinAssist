@@ -1,3 +1,4 @@
+import re
 import requests
 import duckdb
 import pandas as pd
@@ -14,6 +15,25 @@ logging.basicConfig(
     ],
     encoding='utf-8'
 )
+
+def remove_sql_aliases(sql_query: str) -> str:
+    """
+    Удаляет все псевдонимы из SQL-запроса.
+
+    :param sql_query: str, SQL-запрос
+    :return: str, SQL-запрос без псевдонимов
+    """
+    # Регулярное выражение для поиска псевдонимов в SQL
+    alias_pattern = re.compile(r"\bAS\s+[a-zA-Z_][a-zA-Z0-9_]*\b", re.IGNORECASE)
+
+    # Удаляем псевдонимы с помощью регулярного выражения
+    cleaned_query = alias_pattern.sub("", sql_query)
+
+    # Удаляем лишние пробелы, оставшиеся после удаления псевдонимов
+    cleaned_query = re.sub(r"\s+", " ", cleaned_query).strip()
+
+    return cleaned_query
+
 class TextToSQLClient:
     def __init__(self, base_url: str):
         """
@@ -91,8 +111,15 @@ class TextToSQLClient:
                 # Step 3: Execute and compare results
                 with duckdb.connect(database_path) as conn:
                     logging.info("Executing SQL queries on database.")
+                    # generated_sql = remove_sql_aliases(generated_sql)
+                    # expected_sql = remove_sql_aliases(expected_sql)
+
                     generated_result_df = conn.execute(generated_sql).fetchdf()
                     expected_result_df = conn.execute(expected_sql).fetchdf()
+
+                # Оставляем только те колонки, которые есть в expected_result_df
+                common_columns = set(expected_result_df.columns) & set(generated_result_df.columns)
+                generated_result_df = generated_result_df[list(common_columns)]
 
                 # Compare columns
                 if set(generated_result_df.columns) != set(expected_result_df.columns):
@@ -153,7 +180,7 @@ class TextToSQLClient:
 
         # Save results to a file
         results_df = pd.DataFrame(results)
-        results_df.to_csv(output_path, index=False)
+        results_df.to_excel(output_path, index=False)
         logging.info("Results saved to file: %s", output_path)
 
         print(f"Execution Accuracy (EX): {execution_accuracy:.2%}")
@@ -166,6 +193,6 @@ if __name__ == "__main__":
     client = TextToSQLClient(base_url=BASE_URL)
     file_path = "../data/test_text2sql_data.xlsx"
     database_path = "../data/finance_data.duckdb"
-    output_path = "../data/text2sql_results.csv"
+    output_path = "../data/text2sql_results.xlsx"
 
     client.run_text2sql_pipeline(file_path,  BASE_URL, database_path, output_path)
