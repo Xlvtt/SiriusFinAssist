@@ -3,7 +3,7 @@ from text2sql_module.clients.client_text2data import Text2SQLClient
 from langchain_community.tools import tool
 from typing import Annotated
 
-text2sql_client = Text2SQLClient(base_url="http://127.0.0.1:8000")
+text2sql_client = Text2SQLClient(base_url="http://backend:8000")
 
 
 @tool
