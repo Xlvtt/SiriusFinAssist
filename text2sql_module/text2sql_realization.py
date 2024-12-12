@@ -121,7 +121,7 @@ def extract_sql_blocks(text):
 
 # Init vector db
 file_path = "data/train_text2sql_data.xlsx"
-store_embeddings(file_path)
+#store_embeddings(file_path)
 
 # Init client for LLM
 client = Client('Qwen/Qwen2.5')

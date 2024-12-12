@@ -1,8 +1,8 @@
 import streamlit as st
 
-from apiClient import ApiClient
+from Text2SQLClient import Text2SQLClient
 
-client = ApiClient('http://backend:8001')
+client = Text2SQLClient(base_url='http://text2sql:8000')
 
 # Настройка страницы
 st.set_page_config(page_title="Чат-бот", page_icon="🦊", layout="wide")
@@ -55,14 +55,13 @@ def on_click():
     )
     
     # Ответ бота
-    bot_response = client.send_message(user_input)
+    bot_response = client.execute_query(user_input)
 
-    if(bot_response.message == 'Error'):
-        bot_response.message += bot_response.error
     clear_text()
+    
     # Добавляем ответ бота
     st.session_state.messages[st.session_state.current_chat].append(
-        {"role": "assistant", "content": bot_response.message}
+        {"role": "assistant", "content": bot_response}
     )
 
 # Форма ввода

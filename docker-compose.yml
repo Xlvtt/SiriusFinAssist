@@ -20,6 +20,7 @@ services:
       - ./APPUI:/app
     depends_on:
       - backend
+      - text2sql
     networks:
       - app-network
       
@@ -29,8 +30,6 @@ services:
       dockerfile: Dockerfile
     ports:
       - "8000:8000"
-    depends_on:
-      - backend
     networks:
       - app-network
 

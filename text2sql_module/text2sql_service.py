@@ -64,3 +64,8 @@ def execute_query(request: QueryRequest):
         raise e
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Общая ошибка: {str(e)}")
+
+# Добавим корневой роут для проверки
+@app.get("/")
+async def root():
+    return {"status": "API работает!"}
