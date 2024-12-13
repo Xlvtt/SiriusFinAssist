@@ -2,6 +2,7 @@ from langchain_community.tools import TavilySearchResults
 from text2sql_module.clients.client_text2data import Text2SQLClient
 from langchain_community.tools import tool
 from typing import Annotated
+import logging
 
 text2sql_client = Text2SQLClient(base_url="http://127.0.0.1:8000")
 
@@ -18,8 +19,12 @@ def text2sql_tool(
     Use this tool if you need personal information about the user to respond to the request.:
     for example, his lifestyle, spending categories, amounts of expenses, income, hobbies, etc.
     """
-    result = text2sql_client.execute_query(query)
-    return result
+    try:
+        result = text2sql_client.execute_query(query)
+        return result
+    except RuntimeError as exc:
+        logging.error(exc)
+        return "No data"
 
 
 search_tool = TavilySearchResults(
@@ -30,10 +35,9 @@ search_tool = TavilySearchResults(
     include_images=False,
     description="""
     The tool searches for information on the Internet.
-    
+ 
     Use the tool if there is enough publicly available information from the Internet to respond to the request.
     """
 )
 
-print(search_tool.description)
 tools_list = [text2sql_tool, search_tool]

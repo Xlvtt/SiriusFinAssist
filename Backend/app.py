@@ -4,8 +4,26 @@ from pydantic import BaseModel
 import uvicorn
 from fastapi.middleware.cors import CORSMiddleware
 from Qwen import Bot
+from gradio_client import Client
 
-from graph import assistant
+
+class MockAssistant:
+    def __init__(self):
+        self.client = Client("Qwen/Qwen2.5")
+
+    def invoke(self, input_text: str):
+        result = self.client.predict(
+            query=input_text,
+            history=[],
+            system="You are helpful finance assistant. You know some information about user: his average income is 100 000 rubs na dhe loves pony",
+            radio="72B",
+            api_name="/model_chat"
+        )[1][0][-1]['text']
+        return result
+
+
+assistant = MockAssistant()
+
 
 app = FastAPI()
 
@@ -33,8 +51,7 @@ async def chat_endpoint(
     message: str = Query(..., description="Сообщение от пользователя")
 ):
     try:
-        respObj = assistant.invoke({"input": message, "steps_limit": 10})
-        print(str(respObj))
+        respObj = assistant.invoke(message)
         return respObj
     except Exception as e:
         return ChatResponse(

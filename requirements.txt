@@ -13,3 +13,4 @@ tavily-python
 transformers
 torch
 langchain-openai
+deep_translator
