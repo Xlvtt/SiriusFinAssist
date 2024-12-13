@@ -1,11 +1,10 @@
 import streamlit as st
+from apiClient import ApiClient
 
-from Text2SQLClient import Text2SQLClient
-
-client = Text2SQLClient(base_url='http://text2sql:8000')
+client = ApiClient(base_url='http://backend:8001')
 
 # Настройка страницы
-st.set_page_config(page_title="Чат-бот", page_icon="🦊", layout="wide")
+st.set_page_config(page_title="ФинАсистент", page_icon="🦊", layout="wide")
 
 # Инициализация session state
 if "messages" not in st.session_state:
@@ -55,20 +54,23 @@ def on_click():
     )
     
     # Ответ бота
-    bot_response = client.execute_query(user_input)
+    bot_response = client.send_message(user_input)
+
+    if(bot_response.message == 'Error' or bot_response.message == 'None'):
+        bot_response.message = bot_response.error
 
     clear_text()
     
     # Добавляем ответ бота
     st.session_state.messages[st.session_state.current_chat].append(
-        {"role": "assistant", "content": bot_response}
+        {"role": "assistant", "content": bot_response.message}
     )
 
 # Форма ввода
 with st.container():
     col1, col2 = st.columns([6, 1])
     with col1:
-        user_input = st.text_input("Сообщение:", key="user_input", label_visibility="collapsed")
+        user_input = st.text_input("Сообщение:", key="user_input", label_visibility="collapsed",on_change=on_click)
     with col2:
         # Теперь кнопка будет вызывать callback перед обновлением
         send_button = st.button("Отправить", on_click=on_click, use_container_width=True)

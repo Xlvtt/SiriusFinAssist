@@ -10,6 +10,7 @@ __pycache__/
 
 # Distribution / packaging
 .Python
+text2sql_module/
 env/
 build/
 develop-eggs/
@@ -183,3 +184,4 @@ fabric.properties
 
 # idea folder, uncomment if you don't need it
 .idea
+

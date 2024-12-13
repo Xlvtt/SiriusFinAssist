@@ -20,19 +20,9 @@ services:
       - ./APPUI:/app
     depends_on:
       - backend
-      - text2sql
     networks:
       - app-network
       
-  text2sql:
-    build: 
-      context: ./text2sql_module
-      dockerfile: Dockerfile
-    ports:
-      - "8000:8000"
-    networks:
-      - app-network
-
 networks:
   app-network:
     driver: bridge

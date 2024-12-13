@@ -2,17 +2,13 @@ from typing import Optional
 from fastapi import FastAPI, Query
 from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
-from Qwen import Bot
+from agent_run import get_agent_answer as GoAnswer
 
 from dotenv import load_dotenv
 
 load_dotenv()
 
-from graph import assistant
-
 app = FastAPI()
-
-bot = Bot()
 
 app.add_middleware(
     CORSMiddleware,
@@ -34,7 +30,7 @@ async def chat_endpoint(
 ):
     try:
         #respObj = ChatResponse(message=bot.get(message))
-        respObj = ChatResponse(message=assistant.invoke({"input": message}))
+        respObj = ChatResponse(message=GoAnswer(message))
         print(str(respObj))
         return respObj
     except Exception as e:
