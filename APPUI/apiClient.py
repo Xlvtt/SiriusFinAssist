@@ -29,6 +29,7 @@ class ApiClient:
                     'Accept' : 'application/json'
                 }
             )
+            print(f"{response}")
             if response.status_code == 200:
                 return apiResponse.Json(response.text)
             else:

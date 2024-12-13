@@ -11,7 +11,7 @@ RUN apt-get update && apt-get install -y \
 # Копируем и устанавливаем requirements
 COPY requirements.txt .
 RUN pip install --upgrade pip && \
-    pip install --no-cache-dir -r requirements.txt
+    pip install pyautogen python-dotenv gradio_client pandas scikit-learn openpyxl chromadb==0.5.* sentence_transformers duckdb
 
 COPY . .
 

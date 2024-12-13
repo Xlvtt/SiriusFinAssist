@@ -2,17 +2,22 @@ from dotenv import load_dotenv
 load_dotenv()
 
 import os
-import re
 import duckdb
 import pandas as pd
-from sklearn.model_selection import train_test_split
+import logging
+from datetime import datetime
 
 import chromadb
 from chromadb.utils import embedding_functions
 
 from autogen import AssistantAgent, UserProxyAgent, register_function
 
-db_file = 'workdir/finance_data.duckdb'
+# db_file = str(os.path.abspath('finance_data.duckdb'))
+db_file = 'finance_data.duckdb'
+
+print('-------------->' + db_file)
+
+print('Exits--->'+str(os.path.exists(db_file)))
 
 CHROMADB_DIR = "vector_dbs/text2sql_few-shot"
 COLLECTION_NAME = "text2sql_few-shot_examples"
@@ -124,8 +129,10 @@ def delete_table(database_path: str, table_name: str):
 
 
 def get_database_description(query: str) -> str:
+
     # Схема
     schema_text = get_database_schema_as_text(db_file)
+    print('Schema')
 
     # Few-shot
     few_shot_examples = 'Вот тебе примеры:\n'
@@ -133,10 +140,12 @@ def get_database_description(query: str) -> str:
     for text2sql_example in few_shot_text2sql_examples:
         few_shot_examples += f'Вопрос: {text2sql_example["document"]}\nSQL: {text2sql_example["sql"]}\n'
     few_shot_examples += '\n'
+    print('Few shot')
 
     # Data samples
     table_name = 'operations_cte'
     data_samples = get_rows_with_columns(db_file, table_name)
+    print('Data samples')
 
     database_description = f'''Схема базы данных: 
 {schema_text}
@@ -152,10 +161,8 @@ def get_database_description(query: str) -> str:
     return database_description
 
 def execute_query(sql_query: str, table_name: str) -> str:
-    db_path = 'workdir/finance_data.duckdb'
-
     try:
-        conn = duckdb.connect(db_path)
+        conn = duckdb.connect(db_file)
         conn.execute(f"CREATE TABLE {table_name} AS ({sql_query})")
         conn.close()
         return f"Данные успешно сохранены в таблицу: {table_name}"
@@ -164,7 +171,7 @@ def execute_query(sql_query: str, table_name: str) -> str:
     
 
 def fetch_table_data(table_name: str) -> str:
-    database_path = 'workdir/finance_data.duckdb'
+    database_path = db_file
     try:
         # Connect to the DuckDB database
         conn = duckdb.connect(database_path)
@@ -197,6 +204,8 @@ def is_end_conversation(msg: str) -> bool:
             return False
         if 'Ответ:' in msg["content"]:
             return True
+        if 'TERMINATE' in msg["content"]:
+            return True
     return False
 
 text_description = '''Таблица operations_cte: Содержит подробные записи о транзакциях, включая сумму, категорию, описание и статус операции.
@@ -214,9 +223,9 @@ status: Статус операции,'OK' или 'FAILED'.
 
 
 file_path = "few-shot_data/train_text2sql_data.xlsx"
-# store_embeddings(file_path)
+store_embeddings(file_path)
 
-
+BASE_TABLES = ['accounts', 'operations_cte']
 llm_config = {"config_list": [{"model": "gpt-3.5-turbo", "api_key": os.environ["OPENAI_API_KEY"]}]}
 
 assistant = AssistantAgent("assistant", llm_config=llm_config)
@@ -251,31 +260,65 @@ register_function(
     description="Извлечение 10 строк данных из определённой таблицы. Название таблицы указывается как аргумент."
 )
 
+def list_and_clean_tables(database_path: str, base_tables: list):
+    try:
+        connection = duckdb.connect(database_path)
+        
+        tables = connection.execute("SHOW TABLES").fetchall()
 
+        print("Список таблиц в базе данных:")
+        for table in tables:
+            print(table[0])
+        
+        for table in tables:
+            if table[0] not in base_tables:
+                connection.execute(f"DROP TABLE IF EXISTS {table[0]}")
+                print(f"Таблица '{table[0]}' удалена.")
+                
+    except Exception as e:
+        print(f"Ошибка: {e}")
+    
+    finally:
+        connection.close()
+
+
+# Настройка логирования
+log_dir = "chat_logs"
+os.makedirs(log_dir, exist_ok=True)
+log_filename = os.path.join(log_dir, datetime.now().strftime('%Y-%m-%d_%H-%M-%S') + '.log')
+logging.basicConfig(
+    filename=log_filename,
+    level=logging.INFO,
+    format='%(asctime)s - %(message)s',
+    encoding='utf-8'
+)
+
+console_handler = logging.StreamHandler()
+console_handler.setLevel(logging.INFO)
+console_handler.setFormatter(logging.Formatter('%(asctime)s - %(message)s'))
+logging.getLogger().addHandler(console_handler)
 
 def get_agent_answer(question: str) -> str:
-    chatresult = user_proxy.initiate_chat(assistant,
-                                            message=f'''Ответь на вопрос пользователя о его финансах: {question}
-    Действуй по следующему плану:
-    1. Посмотри информацию о базе данных
-    2. Сделай промежуточные таблицы
-    3. Сделай выбор нужных таблиц для ответа на вопрос
-    Ответ дай подробно, указывая все необходимые данные.
-    Формат ответа: 'Ответ:'
-    ''')
-    agent_answer = chatresult.summary.split('Ответ:')[-1].strip()
-    return agent_answer
+    logging.info('question: %s', question)
+
+    try:
+        chatresult = user_proxy.initiate_chat(assistant,
+                                                message=f'''Ответь на вопрос пользователя о его финансах: {question}
+        Действуй по следующему плану:
+        1. Посмотри информацию о базе данных
+        2. Сделай промежуточные таблицы
+        3. Сделай выбор нужных таблиц для ответа на вопрос
+        Ответ дай подробно, указывая все необходимые данные (например валюту или дату если это требуется).
+        Формат ответа: 'Ответ:'
+        ''')
+        agent_answer = chatresult.summary.split('Ответ:')[-1].strip()
+        logging.info('agent_answer: %s', agent_answer)
+        list_and_clean_tables(db_file, BASE_TABLES)
+        return agent_answer
+    except Exception as e:
+        logging.error('Ошибка: %s', str(e))
 
 
 if __name__ == '__main__':
     question = 'На какую сумму был совершён последний перевод?'
-    chatresult = user_proxy.initiate_chat(assistant,
-                                            message=f'''Ответь на вопрос пользователя о его финансах: {question}
-    Действуй по следующему плану:
-    1. Посмотри информацию о базе данных
-    2. Сделай промежуточные таблицы
-    3. Сделай выбор нужных таблиц для ответа на вопрос
-    Ответ дай подробно, указывая все необходимые данные.
-    Формат ответа: 'Ответ:'
-    ''')
-    print(chatresult.summary.split('Ответ:')[-1].strip())
+    print(get_agent_answer(question))
