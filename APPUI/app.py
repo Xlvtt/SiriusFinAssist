@@ -4,19 +4,22 @@ from apiClient import ApiClient
 client = ApiClient(base_url='http://localhost:8001')
 
 # Настройка страницы
-st.set_page_config(page_title="ФинАсистент", page_icon="🦊", layout="wide")
+st.set_page_config(page_title="Финансовый Ассистент", page_icon="💰", layout="wide")
 
 # Инициализация session state
 if "messages" not in st.session_state:
     st.session_state.messages = {}
 if "current_chat" not in st.session_state:
-    st.session_state.current_chat = "Chat 1"
+    st.session_state.current_chat = "Основной чат"
 if "chats" not in st.session_state:
-    st.session_state.chats = ["Chat 1"]
+    st.session_state.chats = ["Основной чат"]
+
 
 # Боковая панель
 with st.sidebar:
-    st.title("💭 Чаты")
+    st.title("📈 Ваш Финансовый Ассистент")
+    st.write("Добро пожаловать! Управляйте своими финансами эффективно.")
+
     
     if st.button("✨ Новый чат"):
         new_chat = f"Chat {len(st.session_state.chats) + 1}"
@@ -33,15 +36,14 @@ if st.session_state.current_chat not in st.session_state.messages:
     st.session_state.messages[st.session_state.current_chat] = []
 
 # Основная область чата
-st.title(f"🦊 Чат-бот - {st.session_state.current_chat}")
+st.title(f"🦊💳 {st.session_state.current_chat}")
 
 # Контейнер для сообщений
 chat_container = st.container()
 
 with chat_container:
     for message in st.session_state.messages[st.session_state.current_chat]:
-        with st.chat_message(message["role"]):
-            st.write(message["content"])
+            st.chat_message(message["role"],avatar= '🦊' if message['role'] == 'user' else '🤖').write(message["content"])
 
 
 
