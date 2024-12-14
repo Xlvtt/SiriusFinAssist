@@ -8,20 +8,18 @@ text2sql_client = Text2SQLClient(base_url="http://127.0.0.1:8000")
 
 @tool
 def text2sql_tool(
-        query: Annotated[str, "Запрос пользователя к базе данных с транзакциями"] # TODO prompt
+        query: Annotated[
+            str, "A text description of the data to be obtained from the database, according to the plan item"
+        ]
 ):
     """
-    Инструмент имеет доступ ко всем транзакциям пользователя, задавшего вопрос. Он отвечает на запрос, опираясь на данные из базы.
+    The tool has access to all transactions and accounts of the user who asked the question. It responds to the request based on data from the database.
 
-    Используй этот инструмент, если для ответа на запрос тебе необходима личная информация о пользователе:
-    например, его образ жизни, категории трат, суммы расходов, доходов, увлечения и тд.
+    Use this tool if you need personal information about the user to respond to the request.:
+    for example, his lifestyle, spending categories, amounts of expenses, income, hobbies, etc.
     """
-    try:
-        result = text2sql_client.execute_query(query)
-        print("Результат запроса:")
-        print(result)
-    except RuntimeError as e:
-        print(f"Произошла ошибка: {e}")
+    result = text2sql_client.execute_query(query)
+    return result
 
 
 search_tool = TavilySearchResults(
@@ -31,10 +29,11 @@ search_tool = TavilySearchResults(
     include_raw_content=True,
     include_images=False,
     description="""
-    Инструмент ищет информацию в интернете.
+    The tool searches for information on the Internet.
     
-    Используй инструмент, если для ответа на запрос достаточно общедоступной информации из интернета
+    Use the tool if there is enough publicly available information from the Internet to respond to the request.
     """
 )
+
 print(search_tool.description)
 tools_list = [text2sql_tool, search_tool]
