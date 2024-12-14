@@ -9,7 +9,6 @@ class apiResponse:
         json_parsed = json.loads(json_message)
         return apiResponse(success=json_parsed['success'],message=json_parsed['message'], error=json_parsed['error'])
 
-
     message: str
     success: bool
     error: Optional[str] = None
@@ -29,6 +28,7 @@ class ApiClient:
                     'Accept' : 'application/json'
                 }
             )
+            print(f"{response}")
             if response.status_code == 200:
                 return apiResponse.Json(response.text)
             else:
