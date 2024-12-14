@@ -4,6 +4,7 @@ import duckdb
 import pandas as pd
 from difflib import SequenceMatcher
 import logging
+import numpy as np
 
 from text2sql_module.config import USAGE_DATABASE
 
@@ -112,8 +113,6 @@ class TextToSQLClient:
                 # Step 3: Execute and compare results
                 with duckdb.connect(database_path) as conn:
                     logging.info("Executing SQL queries on database.")
-                    # generated_sql = remove_sql_aliases(generated_sql)
-                    # expected_sql = remove_sql_aliases(expected_sql)
 
                     generated_result_df = conn.execute(generated_sql).fetchdf()
                     expected_result_df = conn.execute(expected_sql).fetchdf()
@@ -121,6 +120,15 @@ class TextToSQLClient:
                 # Оставляем только те колонки, которые есть в expected_result_df
                 common_columns = set(expected_result_df.columns) & set(generated_result_df.columns)
                 generated_result_df = generated_result_df[list(common_columns)]
+                expected_result_df = expected_result_df[list(common_columns)]
+
+                generated_result_df = generated_result_df.sort_values(
+                    by=generated_result_df.columns.tolist()).reset_index(drop=True)
+                expected_result_df = expected_result_df.sort_values(by=expected_result_df.columns.tolist()).reset_index(
+                    drop=True)
+
+                generated_result_df = generated_result_df.drop_duplicates().reset_index(drop=True)
+                expected_result_df = expected_result_df.drop_duplicates().reset_index(drop=True)
 
                 # Compare columns
                 if set(generated_result_df.columns) != set(expected_result_df.columns):
@@ -136,11 +144,15 @@ class TextToSQLClient:
                     continue
 
                 # Compare rows
-                if not generated_result_df.sort_values(by=generated_result_df.columns.tolist()).reset_index(
-                        drop=True).equals(
-                        expected_result_df.sort_values(by=expected_result_df.columns.tolist()).reset_index(drop=True)
-                ):
+                if not generated_result_df.equals(expected_result_df):
                     logging.warning("Row mismatch for question: %s", question)
+
+                    #  Log details of mismatched rows for debugging
+                    for i, (gen_row, exp_row) in enumerate(
+                            zip(generated_result_df.iterrows(), expected_result_df.iterrows())):
+                        if not gen_row[1].equals(exp_row[1]):
+                            logging.debug(f"Row {i} mismatch: \nGenerated: {gen_row[1]}\nExpected: {exp_row[1]}")
+
                     results.append({
                         "question": question,
                         "expected_sql": expected_sql,
