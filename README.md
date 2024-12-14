@@ -29,4 +29,4 @@
 ![hLLMP_Serious/IMG_7611.png](https://github.com/Xlvtt/SiriusFinAssist/blob/2bf9bffbef6eebab8f0feb605006210e94611c76/LLMP_Serious/IMG_7611.png)
 
 ## Архитектура базового решения
-![img.png](img.png)
+![img.png](images/img.png)
